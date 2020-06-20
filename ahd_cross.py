@@ -24,7 +24,7 @@ Options:
 --ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional) [default: ""]
 
  grab downloads torrents using txt file
-    pick 1 of the following torrent or output:
+    pick 1 of the following torrent or output
   --torrent ; -t <torrents_download>  Here are where the torrent files will download  [default: None]
   --output ; -o <output>  Here are where the torrentlinks will be weritte  [default: None]
 
@@ -47,16 +47,15 @@ Options:
 import requests
 import subprocess
 from pathlib import Path
-import json
 import os
-import glob
 from guessit import guessit
-import untangle
-from imdb import IMDb as ia
 from datetime import date,timedelta, datetime
 from docopt import docopt
 import tempfile
 import urllib.parse
+import xmltodict
+from imdb import IMDb as ia
+import time
 
 
 class guessitinfo():
@@ -317,25 +316,30 @@ def findmatches(arguments,files):
         title=title+": " + fileguessit.get_season()
     imdb=get_imdb(fileguessit.get_info())
     if imdb==None:
+        print(file," could not be parsed")
         return
+
     search = "https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
     print("Searching with:",search)
     try:
-        untangle.parse(search).searchresults.torrent
+        response = requests.get(search, timeout=120)
+    except:
+        print("Issue getting response:",search)
+        return
+    results=xmltodict.parse(response.content)
+    try:
+        results['searchresults']['torrent']
     except:
         print("Error with search")
         return
-    for element in untangle.parse(search).searchresults.torrent:
-        matchtitle=element.name.cdata.strip().lower()
-        matchgroup=element.releasegroup.cdata.strip().lower()
-        matchresolution=element.resolution.cdata.strip()
-        matchsource=element.media.cdata.strip().lower()
-        if matchsource=="uhd blu-ray":
-            matchsource="blu-ray"
-        matchencoding=element.encoding.cdata.strip()
-        matchsize= int(element.size.cdata.strip())
-        matchdate= element.time.cdata.strip()
-        matchdate=datetime.strptime(matchdate, '%Y-%m-%d %H:%M:%S').date()
+    for element in ['searchresults']['torrent']:
+        matchtitle=element['name']
+        matchgroup=element['releasegroup']
+        matchresolution=element['resolution']
+        matchsource=element['media']
+        matchencoding=element['encoding']
+        matchsize= element['size']
+        matchdate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
         if matchtitle!=title:
             continue
         if matchsource!=fileguessit.get_source():
@@ -354,8 +358,9 @@ def findmatches(arguments,files):
             t=open(arguments['--output'],'a')
             print("writing to file:",arguments['--output'])
             t.write(link+'\n')
-            break
-        torrent=torrentfolder+("[ahd]"+ matchtitle +".torrent").replace("/", "_")
+            return
+        else:
+            torrent=torrentfolder+("[ahd]"+ matchtitle +".torrent").replace("/", "_")
         try:
             subprocess.run(['wget',link,'-O',torrent,'--load-cookies',cookie])
             break
@@ -396,6 +401,9 @@ def searchtv(arguments,ignorefile):
   folders=open(arguments['--txt'],"a+")
   print("Adding TV Folders to txt")
   for root in arguments['--tvr']:
+      if root.isdir()==False:
+          print("is not valid directory")
+          continue
       temp=subprocess.check_output([arguments['--fd'],'Season\s[0-9][0-9]$','-t','d','--full-path',root,'--ignore-file',ignorefile]).decode('utf-8')
       folders.write(temp)
       print(temp)
@@ -408,6 +416,9 @@ def searchmovies(arguments,ignorefile):
     folders=open(arguments['--txt'],"a+")
     print("Adding Movies Folders to txt")
     for root in arguments['--mvr']:
+        if root.isdir()==False:
+          print("is not valid directory")
+          continue
         temp=subprocess.check_output([arguments['--fd'],'\)$','-t','d','--full-path',root,'--ignore-file',ignorefile]).decode('utf-8')
         folders.write(temp)
         print(temp)
@@ -444,7 +455,7 @@ def download(arguments,txt):
     source=releasetype(arguments)
 
     for line in folders:
-        print(line)
+        print('\n',line)
         if line=='\n':
             continue
         if source['remux']=='yes':
@@ -629,11 +640,13 @@ def download(arguments,txt):
             webdl4.set_size()
             findmatches(arguments,webdl4)
             files.close()
+        print("Wating 5 Seconds")
+        time.sleep(5)
 
 
 if __name__ == '__main__':
     #
-    arguments = docopt(__doc__, version='cross_seed_scan 1.2')
+    arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
     file=arguments['--txt']
 
     if arguments['scan']:
@@ -645,7 +658,7 @@ if __name__ == '__main__':
         searchtv(arguments,ignorefile)
         searchmovies(arguments,ignorefile)
         duperemove(file)
-    elif arguments['dedupe']:
-        duperemove(arguments['--txt'])
     elif arguments['grab']:
         download(arguments,file)
+    elif arguments['dedupe']:
+        duperemove(arguments['--txt'])
