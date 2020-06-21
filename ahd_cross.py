@@ -2,47 +2,38 @@
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
     cross.py (-h | --help)
-    cross.py scan --txt=<txtlocation>
-    [--delete][--fd <binary_fd>][--ignore <sub_folders_to_ignore> --mvr <movie_root(s)> --tvr <tv_root(s)>]...
-    cross.py grab --txt=<txtlocation> (--torrent <torrents_download> --cookie <cookie> |--output <output>)  --api <apikey>
-    [--date <int> --fd <binary_fd> --size <t_or_f> --cookie <cookie> ]
-    [--exclude <source_excluded>]...
+    cross.py scan
+    [--config <config>][--txt=<txtlocation> --mvr <movie_root(s)>... --tvr <tv_root(s)>...]
+    [--delete][--fd <binary_fd> --ignore <sub_folders_to_ignore>...]
+    cross.py grab [--txt=<txtlocation>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
+    [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
     cross.py dedupe --txt=<txtlocation>
-
-
 
 Options:
   -h --help     Show this screen.
-  scan scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'
+ --txt <txtlocation>  txt file with all the file names(required for all commands) [default:None]
+--fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path,(optional)   [default: fd]
+--config <config> commandline overwrites config
 
-  roots
-
+  scan scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'. Need at least 1 root.
 --tvr <tv_root(s)> These are sonnarr type folders with the files with in a "season **" type folders
 --mvr <movie_root(s)> These are radarr type folders with the files in a file that ends in the year
 
 --delete; -d  Will delete the old txt file(optional)
---ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional) [default: ""]
+--ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional) [default:None]
 
- grab downloads torrents using txt file
-    pick 1 of the following torrent or output
-  --torrent ; -t <torrents_download>  Here are where the torrent files will download  [default: None]
+ grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
+  --torrent ; -t <torrents_download>  Here are where the torrent files will download  [default:None]
+  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.  [default:None]
   --output ; -o <output>  Here are where the torrentlinks will be weritte  [default: None]
-
   --date ; -d <int> only download torrents newer then this input should be int, and represents days. By default it is set to around 25 years(optional)  [default: 10000 ]
-  --api ; -a <apikey> This is your ahd passkey
-  --exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.(optional)  [default: []]
-  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.
-  if you want to download torrents option then a cookie is required
-
+  --api ; -a <apikey> This is your ahd passkey  [default:None]
+  --exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.(optional)  [default:None]
   --size ; -s <t_or_f> set whether a search should be done by name only or include file size restriction. If true then an additonal check will be added to see if all the matching
-  "1080p Remux Files,2160 Remux Files or etc files" in a directory match the size of the ahd response(optional)   [default: t]
-
+  "1080p Remux Files,2160 Remux Files or etc files" in a directory match the size of the ahd response(optional)   [default: 1]
 
   dedupe
   Just a basic script to remove duplicate entries from the list. scan will automatically run this after it finishes
-
-  --txt <txtlocation>  txt file with all the file names(required for all commands)
-  --fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path,(optional)   [default: fd]
   """
 import requests
 import subprocess
@@ -56,6 +47,9 @@ import urllib.parse
 import xmltodict
 from imdb import IMDb as ia
 import time
+import configparser
+config = configparser.ConfigParser(allow_no_value=True)
+
 
 
 class guessitinfo():
@@ -289,12 +283,12 @@ class Folder:
         except:
             return "No Files"
 def duperemove(txt):
-    txt=open(txt,"r")
+    input=open(txt,"r")
     lines_seen = set() # holds lines already seen
-    for line in txt:
+    for line in input:
         if line not in lines_seen: # not a duplicate
             lines_seen.add(line)
-    txt.close()
+    input.close()
     outfile = open(txt, "w")
     for line in lines_seen:
         outfile.write(line)
@@ -386,7 +380,7 @@ def get_imdb(details):
    return id.movieID
 
 def set_ignored(arguments,ignore):
-    arg=arguments['--ignore']
+    arg=arguments['--ignore'].split(',')
     ignore=open(ignore,"a+")
     if arg==None:
         return
@@ -395,14 +389,15 @@ def set_ignored(arguments,ignore):
         ignore.write('\n')
 
 
+
 def searchtv(arguments,ignorefile):
-  if arguments['--tvr']==[]:
-    return
+  if arguments['--tvr']==[] or arguments['--tvr']==None:
+      return
   folders=open(arguments['--txt'],"a+")
   print("Adding TV Folders to txt")
-  for root in arguments['--tvr']:
-      if root.isdir()==False:
-          print("is not valid directory")
+  for root in arguments['--tvr'].split(','):
+      if os.path.isdir(root)==False:
+          print(root," is not valid directory")
           continue
       temp=subprocess.check_output([arguments['--fd'],'Season\s[0-9][0-9]$','-t','d','--full-path',root,'--ignore-file',ignorefile]).decode('utf-8')
       folders.write(temp)
@@ -411,13 +406,13 @@ def searchtv(arguments,ignorefile):
 
 
 def searchmovies(arguments,ignorefile):
-    if arguments['--mvr']==[]:
+    if arguments['--mvr']==[] or arguments['--mvr']==None:
         return
     folders=open(arguments['--txt'],"a+")
     print("Adding Movies Folders to txt")
-    for root in arguments['--mvr']:
-        if root.isdir()==False:
-          print("is not valid directory")
+    for root in arguments['--mvr'].split(','):
+        if os.path.isdir(root)==False:
+          print(root," is not valid directory")
           continue
         temp=subprocess.check_output([arguments['--fd'],'\)$','-t','d','--full-path',root,'--ignore-file',ignorefile]).decode('utf-8')
         folders.write(temp)
@@ -426,9 +421,9 @@ def searchmovies(arguments,ignorefile):
 
 def set_max(arguments):
 
-    if arguments['--size']=="t":
+    if arguments['--size']=="t" or arguments['--size']=='1' or arguments['--size']=="true" or arguments['--size']=="True":
         max="--max-results=100"
-    elif arguments['--size']=="f":
+    elif arguments['--size']=="f" or arguments['--size']=="false" or arguments['--size']=="False":
         max="--max-results=1"
     else:
         print(arguments['--size'],"is not a valid value for size")
@@ -642,12 +637,49 @@ def download(arguments,txt):
             files.close()
         print("Wating 5 Seconds")
         time.sleep(5)
+def createconfig(arguments):
+    try:
+        configpath=arguments.get('--config')
+        config.read(configpath)
+    except:
+        return arguments
+    if arguments['--txt']==None:
+        arguments['--txt']=config['general']['txt']
+    if arguments['--fd']=="fd":
+        arguments['--fd']=config['general']['fd']
+    if arguments['--cookie']==None:
+        arguments['--cookie']=config['grab']['cookie']
+    if arguments['--api']==None:
+        arguments['--api']=config['grab']['api']
+    if arguments['--torrent']==None:
+        arguments['--torrent']=config['grab']['torrent']
+    if arguments['--output']==None:
+        arguments['--output']=config['grab']['output']
+    if arguments['--exclude']==[] or  arguments['--exclude']==None:
+        arguments['--exclude']=config['grab']['exclude']
+    if arguments['--mvr']==[] or  arguments['--mvr']==None:
+        arguments['--mvr']=config['scan']['mvr']
+    if arguments['--tvr']==[] or  arguments['--tvr']==None:
+        arguments['--tvr']=config['scan']['tvr']
+    if arguments['--ignore']==[] or arguments['--ignore']==None:
+        arguments['--ignore']=config['scan']['ignore']
+    if arguments['--size']=="1":
+        arguments['--size']=config['grab']['size']
+
+    return arguments
+
 
 
 if __name__ == '__main__':
-    #
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
+    createconfig(arguments)
     file=arguments['--txt']
+    print(arguments)
+    try:
+        open(file,"r").close()
+    except:
+        print("No txt file")
+        quit()
 
     if arguments['scan']:
         print("Scanning for folders")
@@ -655,6 +687,7 @@ if __name__ == '__main__':
             open(file, 'w').close()
         ignorefile=os.environ['HOME'] + "/.fdignore"
         set_ignored(arguments,ignorefile)
+        duperemove(ignorefile)
         searchtv(arguments,ignorefile)
         searchmovies(arguments,ignorefile)
         duperemove(file)
