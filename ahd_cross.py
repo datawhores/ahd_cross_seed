@@ -12,7 +12,7 @@ Options:
   -h --help     Show this screen.
  --txt <txtlocation>  txt file with all the file names(required for all commands) [default:None]
 --fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path,(optional)   [default: fd]
---config <config> commandline overwrites config
+--config ; -x <config> commandline overwrites config
 
  ahd_cross.py scan scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'. Need at least 1 root.
 --tvr <tv_root(s)> These are sonnarr type folders with the files with in a "season **" type folders
