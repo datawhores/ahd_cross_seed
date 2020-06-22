@@ -33,16 +33,13 @@ note: you need to put a mvt or tvr for each different folder
     
 Downloading:cross.py grab --txt=(txtlocation) --torrent (torrents_download) and or --output (file_location)  --api (apikey) 
     
-    Searches files on jackett using a txt file. txt file should have acceptable scene names/tracker names i.e "Better.Call.Saul.S04E01.Smoke.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-EPSiLON.mkv"
-    Otherwise it will probably just end up downloading the first hit for any search. Files are label with the sitename from jackett and put into the torrent folder
-    For each search if a match is found no other results are checked
-    
+    searches files on ahd using a txt file. txt file should have Folder names.
     pick either --torrent or --output option
     --torrent ; -t this is where matching files will be saved
     --output ; -o
     
     
-    --txt scanned and each line is sent to jackett
+    --txt find files in folders, searches for possible cross seeds
     --api ; -a  your passkey key
 
     
