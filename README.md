@@ -31,10 +31,10 @@ note: you need to put a mvt or tvr for each different folder
     --exclude ; -e Exclude certain types of videos from being added to txt file blu=encode,remux=remux,web=web-dl or web-rip orweb,tv=hdtv,other=badly named files
     --ignored ; -i this folder will be ignored completly, appends to .fdignore, so this should only need to be done once. 
     
-Downloading:cross.py grab --txt=(txtlocation) --torrent (torrents_download) and or --output (file_location)  --api (apikey) 
+Downloading:cross.py grab --txt=(txtlocation) --torrent (torrents_download)  --output (file_location)  --api (apikey) 
     
     searches files on ahd using a txt file. txt file should have Folder names.
-    pick either --torrent or --output option
+    pick either --torrent and/or --output option
     --torrent ; -t this is where matching files will be saved
     --output ; -o
     
