@@ -1,0 +1,14 @@
+[general]
+fd = fd
+txt = input_txt
+[grab]
+api = passkey
+cookie = cookie.txt
+torrent= save_torrents_folder
+output = save_link
+exclude = None
+size = false
+[scan]
+mvr = radarr_movie_folders
+tvr =sonarr_tv
+ignore =/****/TV/Extras,/**/*Other,etc
