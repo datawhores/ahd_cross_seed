@@ -2,9 +2,8 @@
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
     cross.py (-h | --help)
-    cross.py scan
-    [--config <config>][--txt=<txtlocation> --mvr <movie_root(s)>... --tvr <tv_root(s)>...]
-    [--delete][--fd <binary_fd> --ignore <sub_folders_to_ignore>...]
+    cross.py scan [--txt=<txtlocation> --mvr <movie_root(s)>... --tvr <tv_root(s)>...]
+    [--config <config>][--delete][--fd <binary_fd> --ignore <sub_folders_to_ignore>...]
     cross.py grab [--txt=<txtlocation>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
     [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
     cross.py dedupe --txt=<txtlocation>
@@ -15,24 +14,24 @@ Options:
 --fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path,(optional)   [default: fd]
 --config <config> commandline overwrites config
 
-  scan scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'. Need at least 1 root.
+ ahd_cross.py scan scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'. Need at least 1 root.
 --tvr <tv_root(s)> These are sonnarr type folders with the files with in a "season **" type folders
 --mvr <movie_root(s)> These are radarr type folders with the files in a file that ends in the year
 
 --delete; -d  Will delete the old txt file(optional)
 --ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional) [default:None]
 
- grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
+ ahd_cross.py grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
   --torrent ; -t <torrents_download>  Here are where the torrent files will download  [default:None]
   --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.  [default:None]
-  --output ; -o <output>  Here are where the torrentlinks will be weritte  [default: None]
+  --output ; -o <output>  Here are where the torrentlinks will be weritte  [default:None]
   --date ; -d <int> only download torrents newer then this input should be int, and represents days. By default it is set to around 25 years(optional)  [default: 10000 ]
   --api ; -a <apikey> This is your ahd passkey  [default:None]
   --exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.(optional)  [default:None]
   --size ; -s <t_or_f> set whether a search should be done by name only or include file size restriction. If true then an additonal check will be added to see if all the matching
   "1080p Remux Files,2160 Remux Files or etc files" in a directory match the size of the ahd response(optional)   [default: 1]
 
-  dedupe
+  ahd_cross.py dedupe
   Just a basic script to remove duplicate entries from the list. scan will automatically run this after it finishes
   """
 import requests
@@ -43,7 +42,6 @@ from guessit import guessit
 from datetime import date,timedelta, datetime
 from docopt import docopt
 import tempfile
-import urllib.parse
 import xmltodict
 from imdb import IMDb as ia
 import time
@@ -171,7 +169,15 @@ class Folder:
         fd=arguments['--fd']
         max=self.get_max()
         dir=self.get_dir().rstrip()
-        os.chdir(dir)
+        attempts=0
+        while attempts<100:
+            try:
+                os.chdir(dir)
+                break
+            except:
+                attempts=attempts+1
+                print("Getting Files for:",dir,"attempt number ",attempts)
+                continue
         if self.get_type()=="remux2160":
             temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'remux','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*']).decode('utf-8')
@@ -283,6 +289,7 @@ class Folder:
         except:
             return "No Files"
 def duperemove(txt):
+    print("Removing Duplicate lines from ",txt)
     input=open(txt,"r")
     lines_seen = set() # holds lines already seen
     for line in input:
@@ -294,6 +301,12 @@ def duperemove(txt):
         outfile.write(line)
     outfile.close()
 
+def lower(input):
+    if input==None:
+        return input
+    else:
+        input=input.lower()
+        return input
 
 def findmatches(arguments,files):
     torrentfolder=arguments['--torrent']
@@ -322,17 +335,27 @@ def findmatches(arguments,files):
         return
     results=xmltodict.parse(response.content)
     try:
-        results['searchresults']['torrent']
-    except:
-        print("Error with search")
-        return
-    for element in ['searchresults']['torrent']:
-        matchtitle=element['name']
-        matchgroup=element['releasegroup']
+        results['searchresults']['torrent'][1]['name']
+        loop=True
+        max=len(results['searchresults']['torrent'])
+    except KeyError as key:
+        if str(key)=="1":
+            element=results['searchresults']['torrent']
+            max=1
+            loop=False
+        else:
+            print("Probably no results")
+            return
+    for i in range(max):
+        if loop: element = results['searchresults']['torrent'][i]
+        matchtitle=lower(element['name'])
+        matchgroup=lower(element['releasegroup'])
         matchresolution=element['resolution']
-        matchsource=element['media']
+        matchsource=lower(element['media'])
+        if matchsource=="uhd blu-ray":
+            matchsource="blu-ray"
         matchencoding=element['encoding']
-        matchsize= element['size']
+        matchsize= int(element['size'])
         matchdate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
         if matchtitle!=title:
             continue
@@ -346,21 +369,19 @@ def findmatches(arguments,files):
             continue
         if difference(matchsize,size)>.01 and size!=0:
             continue
-        vid=element.id.cdata.strip()
-        link="https://awesome-hd.me/torrents.php?action=download&id=" +vid +"&torrent_pass=" + api
-        if torrentfolder=="None":
+        if arguments['--output']!=None  and arguments['--output']!="" :
+            link="https://awesome-hd.me/torrents.php?id=" + element['groupid']+"&torrentid="+ element['id']
             t=open(arguments['--output'],'a')
             print("writing to file:",arguments['--output'])
             t.write(link+'\n')
-            return
-        else:
-            torrent=torrentfolder+("[ahd]"+ matchtitle +".torrent").replace("/", "_")
-        try:
-            subprocess.run(['wget',link,'-O',torrent,'--load-cookies',cookie])
-            break
-        except:
-            print("Error with getting torrentfile")
-            break
+        if arguments['--torrent']!=None and arguments['--torrent']!="" :
+            link="https://awesome-hd.me/torrents.php?action=download&id=" +vid +"&torrent_pass=" +  element['id']
+            torrent=torrentfolder + ("[ahd]"+ matchtitle +".torrent").replace("/", "_")
+            print(torrent)
+            try:
+                subprocess.run(['wget',link,'-O',torrent])
+            except:
+                print("web error")
 
 
 
@@ -635,7 +656,7 @@ def download(arguments,txt):
             webdl4.set_size()
             findmatches(arguments,webdl4)
             files.close()
-        print("Wating 5 Seconds")
+        print("Waiting 5 Seconds")
         time.sleep(5)
 def createconfig(arguments):
     try:
@@ -674,7 +695,6 @@ if __name__ == '__main__':
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
     createconfig(arguments)
     file=arguments['--txt']
-    print(arguments)
     try:
         open(file,"r").close()
     except:
