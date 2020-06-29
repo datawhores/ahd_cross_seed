@@ -262,19 +262,19 @@ class Folder:
             '--exclude','*2160*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*']).decode('utf-8')
 
         elif self.get_type()=="other2160":
-            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'tv','--exclude','*1080*',
+            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
             '*[tT][rR][aA][iL][eE][rR]*']).decode('utf-8')
         elif self.get_type()=="other1080":
-            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'tv','--exclude','*2160*',
+            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'--exclude','*2160*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
             '*[tT][rR][aA][iL][eE][rR]*']).decode('utf-8')
         elif self.get_type()=="other720":
-            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'tv','--exclude','*1080*',
+            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'--exclude','*1080*',
             '--exclude','*2160*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
             '*[tT][rR][aA][iL][eE][rR]*']).decode('utf-8')
         elif self.get_type()=="other480":
-            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'tv','--exclude','*1080*',
+            temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'--exclude','*1080*',
             '--exclude','*2160*','--exclude','*720*','--exclude','480','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
             '*[tT][rR][aA][iL][eE][rR]*']).decode('utf-8')
         files.write(temp.rstrip())
@@ -308,7 +308,7 @@ def lower(input):
         input=input.lower()
         return input
 
-def findmatches(arguments,files):
+def get_matches(arguments,files):
     torrentfolder=arguments['--torrent']
     api=arguments['--api']
     datefilter=(date.today()- timedelta(int(arguments['--date'])))
@@ -347,8 +347,17 @@ def findmatches(arguments,files):
             print("Probably no results")
             return
     for i in range(max):
+        title=None
+        filedate=None
+        group=None
+        season=None
+        resolution=None
+        source=None
+        filesize=None
         if loop: element = results['searchresults']['torrent'][i]
         matchtitle=lower(element['name'])
+        if matchtitle==None:
+            continue
         matchgroup=lower(element['releasegroup'])
         matchresolution=element['resolution']
         matchsource=lower(element['media'])
@@ -357,25 +366,30 @@ def findmatches(arguments,files):
         matchencoding=element['encoding']
         matchsize= int(element['size'])
         matchdate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
-        if matchtitle!=title:
+        if matchtitle==title:
+            title=True
+        if matchsource==fileguessit.get_source():
+            source=True
+        if matchgroup==fileguessit.get_group():
+            group=True
+        if matchresolution==fileguessit.get_resolution():
+            resolution==True
+        if datefilter < matchdate:
+            filedate=True
+        if difference(matchsize,size)<.01:
+            filesize=True
+        if title is True and source is True and group is True and resolution is True \
+		and filedate is True or filedate is True and group is True and filesize is True and size!=0:
+            pass
+        else:
             continue
-        if matchsource!=fileguessit.get_source():
-            continue
-        if matchgroup!=fileguessit.get_group():
-            continue
-        if matchresolution!=fileguessit.get_resolution():
-            continue
-        if datefilter > matchdate:
-            continue
-        if difference(matchsize,size)>.01 and size!=0:
-            continue
-        if arguments['--output']!=None  and arguments['--output']!="" :
+        if arguments['--output']!=None  and arguments['--output']!="" and arguments['--output']!="None":
             link="https://awesome-hd.me/torrents.php?id=" + element['groupid']+"&torrentid="+ element['id']
             t=open(arguments['--output'],'a')
             print("writing to file:",arguments['--output'])
             t.write(link+'\n')
-        if arguments['--torrent']!=None and arguments['--torrent']!="" :
-            link="https://awesome-hd.me/torrents.php?action=download&id=" +vid +"&torrent_pass=" +  element['id']
+        if arguments['--torrent']!=None and arguments['--torrent']!="" and  arguments['--torrent']!="None":
+            link="https://awesome-hd.me/torrents.php?action=download&id=" +element['groupid'] +"&torrent_pass=" +  element['id']
             torrent=torrentfolder + ("[ahd]"+ matchtitle +".torrent").replace("/", "_")
             print(torrent)
             try:
@@ -391,7 +405,9 @@ def findmatches(arguments,files):
 
 
 def get_imdb(details):
-   title = details['title']
+   title = details.get('title')
+   if title==None:
+       return title
    if 'year' in details:
         title = title + " "+ str(details['year'])
    results = ia().search_movie(title)
@@ -451,7 +467,7 @@ def set_max(arguments):
         quit()
     return max
 def difference(value1,value2):
-    dif=(value2-value1)/((value1+value2)/2)
+    dif=abs((value2-value1)/((value1+value2)/2))
     return dif
 
 def releasetype(arguments):
@@ -479,182 +495,182 @@ def download(arguments,txt):
             remux1=Folder(line,"remux1080",max,arguments)
             remux1.set_files(files)
             remux1.set_size()
-            findmatches(arguments,remux1)
+            get_matches(arguments,remux1)
             #files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             remux2=Folder(line,"remux2160",max,arguments)
             remux2.set_files(files)
             remux2.set_size()
-            findmatches(arguments,remux2)
+            get_matches(arguments,remux2)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             remux3=Folder(line,"remux720",max,arguments)
             remux3.set_files(files)
             remux3.set_size()
-            findmatches(arguments,remux3)
+            get_matches(arguments,remux3)
             files.close()
         if source['blu']=='yes':
             files=tempfile.NamedTemporaryFile('w+')
             blu1=Folder(line,"blu1080",max,arguments)
             blu1.set_files(files)
             blu1.set_size()
-            findmatches(arguments,blu1)
+            get_matches(arguments,blu1)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             blu2=Folder(line,"blu2160",max,arguments)
             blu2.set_files(files)
             blu2.set_size()
-            findmatches(arguments,blu2)
+            get_matches(arguments,blu2)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             blu3=Folder(line,"blu720",max,arguments)
             blu3.set_files(files)
             blu3.set_size()
-            findmatches(arguments,blu3)
+            get_matches(arguments,blu3)
             files.close()
         if source['tv']=='yes':
             files=tempfile.NamedTemporaryFile('w+')
             tv1=Folder(line,"tv1080",max,arguments)
             tv1.set_files(files)
             tv1.set_size()
-            findmatches(arguments,tv1)
+            get_matches(arguments,tv1)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             tv2=Folder(line,"tv2160",max,arguments)
             tv2.set_files(files)
             tv2.set_size()
-            findmatches(arguments,tv2)
+            get_matches(arguments,tv2)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             tv3=Folder(line,"tv720",max,arguments)
             tv3.set_files(files)
             tv3.set_size()
-            findmatches(arguments,tv3)
+            get_matches(arguments,tv3)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             tv4=Folder(line,"tv480",max,arguments)
             tv4.set_files(files)
             tv4.set_size()
-            findmatches(arguments,tv4)
+            get_matches(arguments,tv4)
             files.close()
         if source['other']=='yes':
             files=tempfile.NamedTemporaryFile('w+')
             other1=Folder(line,"other1080",max,arguments)
             other1.set_files(files)
             other1.set_size()
-            findmatches(arguments,other1)
+            get_matches(arguments,other1)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             other2=Folder(line,"other2160",max,arguments)
             other2.set_files(files)
             other2.set_size()
-            findmatches(arguments,other2)
+            get_matches(arguments,other2)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             other3=Folder(line,"other720",max,arguments)
             other3.set_files(files)
             other3.set_size()
-            findmatches(arguments,other3)
+            get_matches(arguments,other3)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             other4=Folder(line,"other480",max,arguments)
             other4.set_files(files)
             other4.set_size()
-            findmatches(arguments,other4)
+            get_matches(arguments,other4)
             files.close()
         if source['web']=='yes':
             files=tempfile.NamedTemporaryFile('w+')
             web1=Folder(line,"web1080",max,arguments)
             web1.set_files(files)
             web1.set_size()
-            findmatches(arguments,web1)
+            get_matches(arguments,web1)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             web2=Folder(line,"web2160",max,arguments)
             web2.set_files(files)
             web2.set_size()
-            findmatches(arguments,web2)
+            get_matches(arguments,web2)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             web3=Folder(line,"web720",max,arguments)
             web3.set_files(files)
             web3.set_size()
-            findmatches(arguments,web3)
+            get_matches(arguments,web3)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             web4=Folder(line,"web480",max,arguments)
             web4.set_files(files)
             web4.set_size()
-            findmatches(arguments,web4)
+            get_matches(arguments,web4)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webr1=Folder(line,"webr1080",max,arguments)
             webr1.set_files(files)
             webr1.set_size()
-            findmatches(arguments,webr1)
+            get_matches(arguments,webr1)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webr2=Folder(line,"webr2160",max,arguments)
             webr2.set_files(files)
             webr2.set_size()
-            findmatches(arguments,webr2)
+            get_matches(arguments,webr2)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webr3=Folder(line,"webr720",max,arguments)
             webr3.set_files(files)
             webr3.set_size()
-            findmatches(arguments,webr3)
+            get_matches(arguments,webr3)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webr4=Folder(line,"webr480",max,arguments)
             webr4.set_files(files)
             webr4.set_size()
-            findmatches(arguments,webr4)
+            get_matches(arguments,webr4)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webdl1=Folder(line,"webdl1080",max,arguments)
             webdl1.set_files(files)
             webdl1.set_size()
-            findmatches(arguments,webdl1)
+            get_matches(arguments,webdl1)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webdl2=Folder(line,"webdl2160",max,arguments)
             webdl2.set_files(files)
             webdl2.set_size()
-            findmatches(arguments,webdl2)
+            get_matches(arguments,webdl2)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webdl3=Folder(line,"webdl720",max,arguments)
             webdl3.set_files(files)
             webdl3.set_size()
-            findmatches(arguments,webdl3)
+            get_matches(arguments,webdl3)
             files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             webdl4=Folder(line,"webdl480",max,arguments)
             webdl4.set_files(files)
             webdl4.set_size()
-            findmatches(arguments,webdl4)
+            get_matches(arguments,webdl4)
             files.close()
         print("Waiting 5 Seconds")
         time.sleep(5)
