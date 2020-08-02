@@ -311,6 +311,7 @@ def lower(input):
 def get_matches(arguments,files):
     torrentfolder=arguments['--torrent']
     api=arguments['--api']
+    cookie=arguments['--cookie']
     datefilter=(date.today()- timedelta(int(arguments['--date'])))
     file=files.get_first()
     if file=="No Files":
@@ -389,16 +390,13 @@ def get_matches(arguments,files):
             print("writing to file:",arguments['--output'])
             t.write(link+'\n')
         if arguments['--torrent']!=None and arguments['--torrent']!="" and  arguments['--torrent']!="None":
-            link="https://awesome-hd.me/torrents.php?action=download&id=" +element['groupid'] +"&torrent_pass=" +  element['id']
+            link="https://awesome-hd.me/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
             torrent=torrentfolder + ("[ahd]"+ matchtitle +".torrent").replace("/", "_")
-            print(torrent)
+            print(torrent,'\n',link)
             try:
-                subprocess.run(['wget',link,'-O',torrent])
+                subprocess.run(['wget','--load-cookies',cookie,link,'-O',torrent])
             except:
                 print("web error")
-
-
-
 
 
 
