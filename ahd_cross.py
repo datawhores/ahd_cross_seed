@@ -391,13 +391,13 @@ def get_matches(arguments,files):
             t.write(link+'\n')
         if arguments['--torrent']!=None and arguments['--torrent']!="" and  arguments['--torrent']!="None":
             link="https://awesome-hd.me/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
-            torrent=torrentfolder + ("[ahd]"+ matchtitle +".torrent").replace("/", "_")
+            name=(element['name']+ "." + element['year']+ "." + element['media']+ "." + element['resolution']+ "." + element['encoding']). replace(" ",".")
+            torrent=torrentfolder + ("[ahd]"+ name +".torrent").replace("/", "_")
             print(torrent,'\n',link)
             try:
                 subprocess.run(['wget','--load-cookies',cookie,link,'-O',torrent])
             except:
                 print("web error")
-
 
 
 
@@ -415,11 +415,12 @@ def get_imdb(details):
    return id.movieID
 
 def set_ignored(arguments,ignore):
-    arg=arguments['--ignore'].split(',')
+    ignorelist=arguments['--ignore']
+    if len(ignorelist)==0:
+        return 
     ignore=open(ignore,"a+")
-    if arg==None:
-        return
-    for element in arg:
+    print(len(ignorelist))
+    for element in ignorelist:
         ignore.write(element)
         ignore.write('\n')
 
@@ -709,11 +710,12 @@ if __name__ == '__main__':
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
     createconfig(arguments)
     file=arguments['--txt']
-    try:
-        open(file,"r").close()
-    except:
-        print("No txt file")
-        quit()
+    open(file,"w").close()
+    # try:
+    #     open(file,"r").close()
+    # except:
+    #     print("No txt file")
+    #     quit()
 
     if arguments['scan']:
         print("Scanning for folders")
