@@ -710,12 +710,11 @@ if __name__ == '__main__':
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
     createconfig(arguments)
     file=arguments['--txt']
-    open(file,"w").close()
-    # try:
-    #     open(file,"r").close()
-    # except:
-    #     print("No txt file")
-    #     quit()
+    try:
+        open(file,"w").close()
+    except:
+        print("No txt file")
+        quit()
 
     if arguments['scan']:
         print("Scanning for folders")
