@@ -3,23 +3,27 @@
 Usage:
     cross.py (-h | --help)
     cross.py scan [--txt=<txtlocation> --mvr <movie_root(s)>... --tvr <tv_root(s)>...]
-    [--config <config>][--delete][--fd <binary_fd> --ignore <sub_folders_to_ignore>...]
+    [--config <config>][--delete][--fd <binary_fd> --fdignore <gitignore_style_ignorefile> --ignore <sub_folders_to_ignore>... ]
     cross.py grab [--txt=<txtlocation>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
     [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
     cross.py dedupe --txt=<txtlocation>
+
 
 Options:
   -h --help     Show this screen.
  --txt <txtlocation>  txt file with all the file names(required for all commands) [default:None]
 --fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path,(optional)   [default: fd]
 --config ; -x <config> commandline overwrites config
+--fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory. 
+other OS may need to input this manually
+
 
  ahd_cross.py scan scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'. Need at least 1 root.
 --tvr <tv_root(s)> These are sonnarr type folders with the files with in a "season **" type folders
 --mvr <movie_root(s)> These are radarr type folders with the files in a file that ends in the year
-
 --delete; -d  Will delete the old txt file(optional)
 --ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional) [default:None]
+
 
  ahd_cross.py grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
   --torrent ; -t <torrents_download>  Here are where the torrent files will download  [default:None]
@@ -290,6 +294,8 @@ class Folder:
             return "No Files"
 def duperemove(txt):
     print("Removing Duplicate lines from ",txt)
+    if txt==None:
+        return
     input=open(txt,"r")
     lines_seen = set() # holds lines already seen
     for line in input:
@@ -415,9 +421,12 @@ def get_imdb(details):
    return id.movieID
 
 def set_ignored(arguments,ignore):
+    if ignore==None:
+       return
     ignorelist=arguments['--ignore']
     if len(ignorelist)==0:
         return 
+    open(ignore,"w+").close()
     ignore=open(ignore,"a+")
     print(len(ignorelist))
     for element in ignorelist:
@@ -720,11 +729,17 @@ if __name__ == '__main__':
         print("Scanning for folders")
         if arguments['--delete']:
             open(file, 'w').close()
-        ignorefile=os.environ['HOME'] + "/.fdignore"
-        set_ignored(arguments,ignorefile)
-        duperemove(ignorefile)
-        searchtv(arguments,ignorefile)
-        searchmovies(arguments,ignorefile)
+        fdignore=arguments['--fdignore']
+        if fdignore==None:
+            try:
+                fdignore=os.environ['HOME'] + "/.fdignore"
+            except:
+                print("You might be on windows make sure to pass --fdignore option")
+                exit()
+        set_ignored(arguments,fdignore)
+        duperemove(fdignore)
+        searchtv(arguments,fdignore)
+        searchmovies(arguments,fdignore)
         duperemove(file)
     elif arguments['grab']:
         download(arguments,file)
