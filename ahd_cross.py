@@ -40,6 +40,7 @@ other OS may need to input this manually
   """
 import requests
 import subprocess
+from subprocess import PIPE
 from pathlib import Path
 import os
 from guessit import guessit
@@ -444,9 +445,7 @@ def searchtv(arguments,ignorefile):
       if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-      temp=subprocess.check_output([arguments['--fd'],'Season\s[0-9][0-9]$','-t','d','--full-path',root,'--ignore-file',ignorefile]).decode('utf-8')
-      folders.write(temp)
-      print(temp)
+      temp=subprocess.run([arguments['--fd'],'Season\s[0-9][0-9]$','-t','d','--full-path',root,'--ignore-file',ignorefile],stdout=folders)
   print("Done")
 
 
@@ -459,9 +458,7 @@ def searchmovies(arguments,ignorefile):
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-        temp=subprocess.check_output([arguments['--fd'],'\)$','-t','d','--full-path',root,'--ignore-file',ignorefile]).decode('utf-8')
-        folders.write(temp)
-        print(temp)
+        temp=subprocess.run([arguments['--fd'],'\)$','-t','d','--full-path',root,'--ignore-file',ignorefile],stdout=folders)
     print("Done")
 
 def set_max(arguments):
