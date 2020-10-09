@@ -2,11 +2,13 @@
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
     cross.py (-h | --help)
-    cross.py scan [--txt=<txtlocation> --mvr <movie_root(s)>... --tvr <tv_root(s)>...]
-    [--config <config>][--delete][--fd <binary_fd> --fdignore <gitignore_style_ignorefile> --ignore <sub_folders_to_ignore>... ]
+    cross.py scan [--txt=<txtlocation>]
+    [--mvr <movie_root(s)>]... [--tvr <tv_root(s)>]... [--ignore <sub_folders_to_ignore>]... 
+    [--config <config>][--delete][--fd <binary_fd> --fdignore <gitignore_style_ignorefile> ]
     cross.py grab [--txt=<txtlocation>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
     [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
     cross.py dedupe --txt=<txtlocation>
+
 
 
 Options:
@@ -102,8 +104,8 @@ class guessitinfo():
             remux=remux.source.lower()
         except:
             pass
-        if remux=="remux" or self.source=="hd-dvd":
-                self.source=remux
+        if remux == "remux" or self.source == "hd-dvd" or self.source=="Ultra HD Blu-ray":
+            self.source = remux
     def set_group(self):
         self.group=self.get_info().get('release_group',"")
         try:
@@ -424,13 +426,15 @@ def get_imdb(details):
 def set_ignored(arguments,ignore):
     if ignore==None:
        return
-    ignorelist=arguments['--ignore']
+    try:
+        ignorelist=arguments['--ignore'].split(',')
+    except:
+         ignorelist=arguments['--ignore']
     if len(ignorelist)==0:
         return 
     open(ignore,"w+").close()
     ignore=open(ignore,"a+")
-    print(len(ignorelist))
-    for element in ignorelist:
+    for element in arguments['--ignore']:
         ignore.write(element)
         ignore.write('\n')
 
@@ -441,7 +445,11 @@ def searchtv(arguments,ignorefile):
       return
   folders=open(arguments['--txt'],"a+")
   print("Adding TV Folders to txt")
-  for root in arguments['--tvr'].split(','):
+  try:
+    list=arguments['--tvr'].split(',')
+  except:
+    list=arguments['--tvr']
+  for root in list:
       if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
@@ -717,7 +725,7 @@ if __name__ == '__main__':
     createconfig(arguments)
     file=arguments['--txt']
     try:
-        open(file,"w").close()
+        open(file,"a+").close()
     except:
         print("No txt file")
         quit()
@@ -732,7 +740,7 @@ if __name__ == '__main__':
                 fdignore=os.environ['HOME'] + "/.fdignore"
             except:
                 print("You might be on windows make sure to pass --fdignore option")
-                exit()
+                exit() 
         set_ignored(arguments,fdignore)
         duperemove(fdignore)
         searchtv(arguments,fdignore)
