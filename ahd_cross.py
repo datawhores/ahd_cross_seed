@@ -3,7 +3,7 @@
 Usage:
     cross.py (-h | --help)
     cross.py scan [--txt=<txtlocation>]
-    [--mvr <movie_root(s)>]... [--tvr <tv_root(s)>]... [--ignore <sub_folders_to_ignore>]... 
+    [--mvr <movie_root(s)>]... [--tvr <tv_root(s)>]... [--ignore <sub_folders_to_ignore>]...
     [--config <config>][--delete][--fd <binary_fd> --fdignore <gitignore_style_ignorefile> ]
     cross.py grab [--txt=<txtlocation>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
     [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
@@ -16,7 +16,7 @@ Options:
  --txt <txtlocation>  txt file with all the file names(required for all commands) [default:None]
 --fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path,(optional)   [default: fd]
 --config ; -x <config> commandline overwrites config
---fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory. 
+--fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory.
 other OS may need to input this manually
 
 
@@ -144,12 +144,14 @@ class Folder:
     """
 
     def __init__(self,dir,type,max,arguments):
+        pass
         self.size=0
         self.type=type
         self.files=""
         self.dir=dir.strip()
         self.max=max
         self.arguments=arguments
+        self.error=open("Errors/errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt", "a")
     def get_dir(self):
         return self.dir
     def get_type(self):
@@ -164,6 +166,10 @@ class Folder:
         return  self.arguments
     def set_size(self):
         temp=0
+        #error out if no files found
+        if self.get_files()==None:
+            self.size=temp
+            return
         self.get_files().seek(0, 0)
         if len(self.get_files().readlines())<1:
             return
@@ -185,6 +191,15 @@ class Folder:
                 attempts=attempts+1
                 print("Getting Files for:",dir,"attempt number ",attempts)
                 continue
+        if attempts==100:
+            errorstring="No Files Found: "+dir
+            self.error(errorstring)
+            print("Unable to get Files From Directory")
+            self.files = None
+            return
+
+
+
         if self.get_type()=="remux2160":
             temp=subprocess.check_output([fd,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v',max,'remux','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*']).decode('utf-8')
@@ -287,6 +302,8 @@ class Folder:
         files.write(temp.rstrip())
         self.files=files
 
+
+
     def get_first(self):
         self.get_files().seek(0, 0)
         files=self.get_files()
@@ -325,7 +342,7 @@ def get_matches(arguments,files):
     file=files.get_first()
     if file=="No Files":
         return
-    size=files.get_size()
+    filesize=files.get_size()
     fileguessit=guessitinfo(file)
     fileguessit.set_values()
     title=fileguessit.get_name().lower()
@@ -365,31 +382,31 @@ def get_matches(arguments,files):
         source=None
         filesize=None
         if loop: element = results['searchresults']['torrent'][i]
-        matchtitle=lower(element['name'])
-        if matchtitle==None:
+        querytitle=lower(element['name'])
+        if querytitle==None:
             continue
-        matchgroup=lower(element['releasegroup'])
-        matchresolution=element['resolution']
-        matchsource=lower(element['media'])
-        if matchsource=="uhd blu-ray":
-            matchsource="blu-ray"
-        matchencoding=element['encoding']
-        matchsize= int(element['size'])
-        matchdate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
-        if matchtitle==title:
+        querygroup=lower(element['releasegroup'])
+        queryresolution=element['resolution']
+        querysource=lower(element['media'])
+        if querysource=="uhd blu-ray":
+            querysource="blu-ray"
+        queryencoding=element['encoding']
+        querysize= int(element['size'])
+        querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
+        if querytitle==title:
             title=True
-        if matchsource==fileguessit.get_source():
+        if querysource==fileguessit.get_source():
             source=True
-        if matchgroup==fileguessit.get_group():
+        if querygroup==fileguessit.get_group():
             group=True
-        if matchresolution==fileguessit.get_resolution():
+        if queryresolution==fileguessit.get_resolution():
             resolution==True
-        if datefilter < matchdate:
+        if datefilter < querydate:
             filedate=True
-        if difference(matchsize,size)<.01:
-            filesize=True
-        if title is True and source is True and group is True and resolution is True \
-		and filedate is True or filedate is True and group is True and filesize is True and size!=0:
+        if difference(querysize,filesize)<.01:
+            sizematch=True
+        if (title is True and source is True and group is True and resolution is True \
+        and filedate is True) or ((filedate is True and group is True and sizematch is True) and filesize!=0):
             pass
         else:
             continue
@@ -431,7 +448,7 @@ def set_ignored(arguments,ignore):
     except:
          ignorelist=arguments['--ignore']
     if len(ignorelist)==0:
-        return 
+        return
     open(ignore,"w+").close()
     ignore=open(ignore,"a+")
     for element in arguments['--ignore']:
@@ -740,7 +757,7 @@ if __name__ == '__main__':
                 fdignore=os.environ['HOME'] + "/.fdignore"
             except:
                 print("You might be on windows make sure to pass --fdignore option")
-                exit() 
+                exit()
         set_ignored(arguments,fdignore)
         duperemove(fdignore)
         searchtv(arguments,fdignore)
@@ -750,3 +767,5 @@ if __name__ == '__main__':
         download(arguments,file)
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
+
+
