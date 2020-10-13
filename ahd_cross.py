@@ -526,7 +526,7 @@ def download(arguments,txt):
             remux1.set_files(files)
             remux1.set_size()
             get_matches(arguments,remux1)
-            #files.close()
+            files.close()
 
             files=tempfile.NamedTemporaryFile('w+')
             remux2=Folder(line,"remux2160",max,arguments)
