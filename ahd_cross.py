@@ -192,7 +192,7 @@ class Folder:
                 print("Getting Files for:",dir,"attempt number ",attempts)
                 continue
         if attempts==100:
-            errorstring="No Files Found: "+dir
+            errorstring="No " +self.get_type() + "Files Found: "+dir
             self.error(errorstring)
             print("Unable to get Files From Directory")
             self.files = None
