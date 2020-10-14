@@ -188,7 +188,7 @@ class Folder:
                 attempts=attempts+1
                 print("Getting Files for:",dir,"attempt number ",attempts)
                 continue
-        if attempts>100:
+        if attempts==100:
             errorpath=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
             if os.path.isdir(errorpath)==False:
                 os.mkdir(errorpath)
