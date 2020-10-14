@@ -151,7 +151,7 @@ class Folder:
         self.files=""
         self.dir=dir.strip()
         self.arguments=arguments
-        self.error=open(pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/ahdcs.errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt", "a")
+        self.error=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/ahdcs.errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
     def get_dir(self):
         return self.dir
     def get_type(self):
@@ -188,12 +188,14 @@ class Folder:
                 attempts=attempts+1
                 print("Getting Files for:",dir,"attempt number ",attempts)
                 continue
-        if attempts==100:
-            errorstring="No " +self.get_type() + "Files Found: "+dir
-            self.error(errorstring)
+        if attempts>100:
+            errorfile=open(self.error,"a+")
+            errorstring="No " +self.get_type() + " Files Found: "+dir +"\n"
+            errorfile.write(errorstring)
+            errorfile.close()
             print("Unable to get Files From Directory")
             self.files = None
-            return
+            return 
 
 
 
@@ -302,9 +304,10 @@ class Folder:
 
 
     def get_first(self):
-        self.get_files().seek(0, 0)
         files=self.get_files()
+        
         try:
+            files.seek(0, 0)
             first=files.readlines()[0]
             return first
         except:
