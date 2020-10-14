@@ -446,7 +446,7 @@ def set_ignored(arguments,ignore):
         return
     open(ignore,"w+").close()
     ignore=open(ignore,"a+")
-    for element in arguments['--ignore']:
+    for element in ignorelist:
         ignore.write(element)
         ignore.write('\n')
 
@@ -456,7 +456,7 @@ def searchtv(arguments,ignorefile):
   if arguments['--tvr']==[] or arguments['--tvr']==None:
       return
   folders=open(arguments['--txt'],"a+")
-  print("Adding TV Folders to txt")
+  print("Adding TV Folders to",arguments['--txt'])
   try:
     list=arguments['--tvr'].split(',')
   except:
@@ -473,8 +473,12 @@ def searchmovies(arguments,ignorefile):
     if arguments['--mvr']==[] or arguments['--mvr']==None:
         return
     folders=open(arguments['--txt'],"a+")
-    print("Adding Movies Folders to txt")
-    for root in arguments['--mvr'].split(','):
+    print("Adding Movies Folders to", arguments['--txt'])
+    try:
+        list=arguments['--mvr'].split(',')
+    except:
+        list=arguments['--mvr']
+    for root in list:
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
