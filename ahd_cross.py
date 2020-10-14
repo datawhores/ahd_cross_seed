@@ -42,6 +42,7 @@ other OS may need to input this manually
   """
 import requests
 import subprocess
+import pathlib
 from subprocess import PIPE
 from pathlib import Path
 import os
@@ -150,7 +151,7 @@ class Folder:
         self.files=""
         self.dir=dir.strip()
         self.arguments=arguments
-        self.error=open("Errors/errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt", "a")
+        self.error=open(pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/ahdcs.errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt", "a")
     def get_dir(self):
         return self.dir
     def get_type(self):
@@ -163,7 +164,8 @@ class Folder:
         return  self.arguments
     def set_size(self):
         #error out if no files found
-        if self.arguments["size"]==False or self.arguments["size"]=="F" or self.arguments["size"]=="false" or self.arguments["size"]=="f" or self.get_files()==None:
+        temp=0
+        if self.arguments["--size"]==False or self.arguments["--size"]=="F" or self.arguments["--size"]=="false" or self.arguments["--size"]=="f" or self.get_files()==None:
             self.size=temp
             return
         self.get_files().seek(0, 0)
@@ -338,6 +340,7 @@ def get_matches(arguments,files):
     if file=="No Files":
         return
     filesize=files.get_size()
+
     fileguessit=guessitinfo(file)
     fileguessit.set_values()
     title=fileguessit.get_name().lower()
@@ -369,13 +372,12 @@ def get_matches(arguments,files):
             print("Probably no results")
             return
     for i in range(max):
-        title=None
-        filedate=None
-        group=None
-        season=None
-        resolution=None
-        source=None
-        filesize=None
+        title=False
+        filedate=False
+        group=False
+        resolution=False
+        source=False
+        sizematch=False
         if loop: element = results['searchresults']['torrent'][i]
         querytitle=lower(element['name'])
         if querytitle==None:
@@ -751,8 +753,8 @@ if __name__ == '__main__':
         searchmovies(arguments,fdignore)
         duperemove(file)
     elif arguments['grab']:
+        print(pathlib.Path(__file__).parent.absolute())
         download(arguments,file)
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
-
 
