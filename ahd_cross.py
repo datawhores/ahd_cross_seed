@@ -440,7 +440,7 @@ def get_imdb(details):
    if len(results) == 0:
         return None
    if 'year' in details:
-    for movie in id:
+    for movie in results:
         if ((details.get('year')==movie.get('year')) and (movie.get('year')!=None or details.get('year')!=None )):
             return movie.movieID
    else:
