@@ -192,14 +192,14 @@ class Folder:
             errorpath=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
             if os.path.isdir(errorpath)==False:
                 os.mkdir(errorpath)
-            errorfile=errorpath+"ahdcs.errors"+self.date+".txt" 
+            errorfile=errorpath+"ahdcs.errors"+self.date+".txt"
             errorfile=open(errorfile,"a+")
             errorstring="No " +self.get_type() + " Files Found: "+dir + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
             errorfile.write(errorstring)
             errorfile.close()
             print("Unable to get Files From Directory")
             self.files = None
-            return 
+            return
 
 
 
@@ -309,7 +309,7 @@ class Folder:
 
     def get_first(self):
         files=self.get_files()
-        
+
         try:
             files.seek(0, 0)
             first=files.readlines()[0]
@@ -436,25 +436,20 @@ def get_imdb(details):
    title = details.get('title')
    if title==None:
        return title
-#   if 'year' in details:
-#        title = title + " "+ str(details['year'])
-   print(title)
-   results = ia().search_movie(title)
-   
+   results = ia().search_movie_advanced(title,results=300)
    if len(results) == 0:
-        return None             
-   id=ia().search_movie_advanced(title,results=300)
+        return None
    if 'year' in details:
     for movie in id:
         if ((details.get('year')==movie.get('year')) and (movie.get('year')!=None or details.get('year')!=None )):
             return movie.movieID
    else:
-      return id.movieID[0]
+      return results.movieID[0]
 
-            
 
-    
- 
+
+
+
 
 def set_ignored(arguments,ignore):
     if ignore==None:
@@ -775,5 +770,3 @@ if __name__ == '__main__':
         download(arguments,file)
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
-
-
