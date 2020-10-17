@@ -51,7 +51,9 @@ from datetime import date,timedelta, datetime
 from docopt import docopt
 import tempfile
 import xmltodict
-from imdb import IMDb as ia
+#from imdb import IMDb as ia
+#from imdb import IMDbError
+from imdb import IMDb, IMDbError
 import time
 import configparser
 config = configparser.ConfigParser(allow_no_value=True)
@@ -434,19 +436,10 @@ def get_matches(arguments,files):
 
 def get_imdb(details):
    title = details.get('title')
+   ia = IMDb()
    if title==None:
        return title
-   print(title)
-   max=500
-   for i in range(1,12):
-       if i==11:
-           results = ia().search_movie(title)
-           break
-       try:
-           results = ia().search_movie_advanced(title,max)
-       except:
-           max=max-50
-           continue
+   results = ia.search_movie(title)
    if len(results) == 0:
         return None
    if 'year' in details:
@@ -780,4 +773,3 @@ if __name__ == '__main__':
         download(arguments,file)
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
-
