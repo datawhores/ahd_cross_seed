@@ -436,7 +436,17 @@ def get_imdb(details):
    title = details.get('title')
    if title==None:
        return title
-   results = ia().search_movie_advanced(title,results=300)
+   print(title)
+   max=500
+   for i in range(1,12):
+       if i==11:
+           results = ia().search_movie(title)
+           break
+       try:
+           results = ia().search_movie_advanced(title,max)
+       except:
+           max=max-50
+           continue
    if len(results) == 0:
         return None
    if 'year' in details:
@@ -770,3 +780,4 @@ if __name__ == '__main__':
         download(arguments,file)
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
+
