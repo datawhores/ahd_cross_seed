@@ -434,12 +434,25 @@ def get_matches(arguments,files):
 
 
 
+
 def get_imdb(details):
    title = details.get('title')
    ia = IMDb()
    if title==None:
        return title
-   results = ia.search_movie(title)
+   for i in range(0,16):
+       if i==15:
+           return None
+       try:
+         results = ia.search_movie(title)
+         break
+       except Exception as e:
+           time.sleep(10)
+
+
+
+
+
    if len(results) == 0:
         return None
    if 'year' in details:
@@ -774,3 +787,4 @@ if __name__ == '__main__':
         download(arguments,file)
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
+a
