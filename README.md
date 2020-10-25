@@ -56,12 +56,23 @@ Downloading:cross.py grab --txt=(txtlocation) --torrent (torrents_download)  --o
     "1080p Remux Files,2160 Remux Files" in a directory match the size of the file from the api response
     --exclude ; -e For any directory this type of file will not be checked for possible cross seeds
     --fd fd is a program for finding files if you can't install to system path you can put the location of the binary using this option. Note: a binary is included in this repo
-    
-dedupe:
-    runs every time you scan a folder, after the scan has finished.
-    Can be ran seperately if for example you exit out a scan or it crashes
-    
-     --txt file to dedupe
+
+missing:ahd_cross.py grab --txt=(txtlocation) --api (apikey)  --output2
+
+```
+ This is meant to find files in your libary that can potentially be uploaded to a site. Note the get_missing file has a section marked, that can and should be changed based on site. It would be impossible to make this work easily with the vast variety of site rules out their. However, the default assumes that a site only allows one of every type of upload.
+--output2 <txt_where_potential_uploads_are written> here we output to a txt file files that don't have any uploads. This means     that we can potentially upload these, for rank. Or to increase the amount of cross seeds we have
+```
+
+
+dedupe:ahd_cross.py dedupe --txt=(txtlocation) 
+```
+runs every time you scan a folder, after the scan has finished.
+Can be ran seperately if for example you exit out a scan or it crashes
+--txt file to dedupe
+```
+
+
    
     
     
