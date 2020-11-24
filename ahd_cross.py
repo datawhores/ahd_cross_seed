@@ -16,7 +16,7 @@ Usage:
 
 Options:
   -h --help     Show this screen.
- --txt <txtlocation>  txt file with all the file names(required for all commands) [default:None]
+ --txt <txtlocation>  txt file with all the file names(required for all commands)
 --fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path,(optional)   [default: fd]
 --config ; -x <config> commandline overwrites config
 --fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory.
@@ -27,17 +27,17 @@ other OS may need to input this manually
 --tvr <tv_root(s)> These are sonnarr type folders with the files with in a "season **" type folders
 --mvr <movie_root(s)> These are radarr type folders with the files in a file that ends in the year
 --delete; -d  Will delete the old txt file(optional)
---ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional) [default:None]
+--ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional)
 
 
  ahd_cross.py grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
-  --torrent ; -t <torrents_download>  Here are where the torrent files will download  [default:None]
-  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.  [default:None]
-  --output ; -o <output>  Here are where the torrentlinks will be weritte  [default:None]
+  --torrent ; -t <torrents_download>  Here are where the torrent files will download
+  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.
+  --output ; -o <output>  Here are where the torrentlinks will be weritte
   --date ; -d <int> only download torrents newer then this input should be int, and represents days. By default it is set to around 25 years(optional)  [default: 10000 ]
-  --api ; -a <apikey> This is your ahd passkey  [default:None]
-  --exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.(optional)  [default:None]
-  --size ; -s <t_or_f> set whether a search should be done by name only or include file size restriction. If true then secondary check will be added to find a match [default:t]
+  --api ; -a <apikey> This is your ahd passkey
+  --exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.(optional)
+  --size ; -s <t_or_f> set whether a search should be done by name only or include file size restriction. If true then secondary check will be added to find a match [default: t]
   "1080p Remux Files,2160 Remux Files or etc files" in a directory match the size of the ahd response(optional)   [default: 1]
 
   ahd_cross.py missing
@@ -904,8 +904,8 @@ def scan_folder(arguments,txt):
             webdl4.set_size()
             get_missing(arguments,webdl4)
             files.close()
-        print("Waiting 3 Seconds")
-        time.sleep(3)
+        # print("Waiting 5 Seconds")
+        # time.sleep(5)
 
 
 def get_missing(arguments,files,encode=None):
@@ -1094,7 +1094,7 @@ if __name__ == '__main__':
     elif arguments['missing']:
         if arguments['--output2']=='':
             print("output2 must be configured for missing scan ")
-            return
+            quit()
         scan_folder(arguments,file)
         duperemove(arguments['--output2'])
     elif arguments['dedupe']:
