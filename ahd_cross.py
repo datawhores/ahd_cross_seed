@@ -127,11 +127,10 @@ def releasetype(arguments):
 def download(arguments,txt):
     list=open(txt,"r")
     source=releasetype(arguments)
-
-    errorfile=os.getcwd()+"/Errors/"
+    errorfile=errorpath=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
     if os.path.isdir(errorfile)==False:
             os.mkdir(errorfile)
-    errorfile=os.getcwd()+"/Errors/"+"ahdcross_errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
+    errorfile=errorfile+"ahdcross_errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
     for line in list:
         print('\n',line)
         if line=='\n' or line=="" or len(line)==0:
@@ -147,10 +146,10 @@ def download(arguments,txt):
 def scan(arguments,txt):
     source=releasetype(arguments)
     list=open(txt,"r")
-    errorfile=os.getcwd()+"/Errors/"
+    errorfile=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
     if os.path.isdir(errorfile)==False:
             os.mkdir(errorfile)
-    errorfile=os.getcwd()+"/Errors/"+"ahdcross_errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
+    errorfile=errorfile+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
 
     for line in list:
         print('\n',line)
