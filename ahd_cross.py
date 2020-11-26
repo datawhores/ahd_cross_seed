@@ -5,7 +5,7 @@ Usage:
     ahd_cross.py scan [--txt=<txtlocation>]
     [--radarrt <movie_root(s)>]... [--sonarrt <tv_root(s)>]... [--normalrt <normal_root(s)>]... [--ignore <sub_folders_to_ignore>]...
     [--config <config>][--delete][--fd <b--inary_fd> --fdignore <gitignore_style_ignorefile> ]
-    ahd_cross.py grab [--txt=<txtloc--ation>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
+    ahd_cross.py grab [--txt=<txtloc--ation> --lines-skip <num_lines_skipped>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
     [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
     ahd_cross.py missing [--txt=<txtlocation> --output2 <output>  --api <apikey>][--config <config>]
     ahd_cross.py dedupe --txt=<txtlocation>
@@ -32,6 +32,7 @@ other OS may need to input this manually
 
 
  ahd_cross.py grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
+  --lines-skip <num_lines_skipped> Number of lines in txt file to skip during grab  [default: 0]
   --torrent ; -t <torrents_download>  Here are where the torrent files will download
   --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.
   --output ; -o <output>  Here are where the torrentlinks will be weritte
@@ -61,11 +62,13 @@ from docopt import docopt
 import tempfile
 import time
 import configparser
+import re
 config = configparser.ConfigParser(allow_no_value=True)
 #import other files
 from folders import *
 from classes import *
 from files import *
+
 
 
 
@@ -125,6 +128,7 @@ def releasetype(arguments):
             pass
     return source
 def download(arguments,txt):
+    index=0
     list=open(txt,"r")
     source=releasetype(arguments)
     errorfile=errorpath=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
@@ -132,15 +136,26 @@ def download(arguments,txt):
             os.mkdir(errorfile)
     errorfile=errorfile+"ahdcross_errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
     for line in list:
+        index=index+1
         print('\n',line)
+        if index<=int(arguments["--lines-skip"]):
+            print("Skipping Line")
+            continue
         if line=='\n' or line=="" or len(line)==0:
             continue
         line=line.rstrip("\n")
         if os.path.isdir(line)==True:
             download_folder(arguments,txt,line,source,errorfile)
-        else:
+        if os.path.isfile(line)==True:
             print("false")
             download_file(arguments,txt,line,source,errorfile)
+        else:
+            print("File or Dir Not found")
+            errorpath=open(errorfile,"a+")
+            errorstring=line +": File or Dir Not found "  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
+            errorpath.write(errorstring)
+            errorpath.close()
+            continue
         print("Waiting 5 Seconds")
         time.sleep(5)
 def scan(arguments,txt):
@@ -152,14 +167,29 @@ def scan(arguments,txt):
     errorfile=errorfile+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
 
     for line in list:
+        index=index+1
         print('\n',line)
-        if line=='\n':
+        if index<=int(arguments["--lines-skip"]):
+            print("Skipping Line")
+            continue
+        if line=='\n' or line=="" or len(line)==0:
+            continue
+        if  re.search("#",line)!=None:
+            print("Skipping Line")
             continue
         line=line.rstrip("\n")
         if os.path.isdir(line)==True:
             scan_folder(arguments,txt,line,source,errorfile)
-        else:
+        if os.path.isfile(line)==True:
             scan_file(arguments,txt,line,source,errorfile)
+        else:
+            print("File or Dir Not found")
+            errorpath=open(errorfile,"a+")
+            errorstring=line +": File or Dir Not found "  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
+            errorpath.write(errorstring)
+            errorpath.close()
+            continue
+
         print("Waiting 5 Seconds")
         time.sleep(5)
 """
