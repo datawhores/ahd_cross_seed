@@ -144,9 +144,11 @@ def download(arguments,txt):
         if line=='\n' or line=="" or len(line)==0:
             continue
         line=line.rstrip("\n")
+
+
         if os.path.isdir(line)==True:
             download_folder(arguments,txt,line,source,errorfile)
-        if os.path.isfile(line)==True:
+        elif os.path.isfile(line)==True:
             print("false")
             download_file(arguments,txt,line,source,errorfile)
         else:
@@ -172,7 +174,7 @@ def scan(arguments,txt):
         if index<=int(arguments["--lines-skip"]):
             print("Skipping Line")
             continue
-        if line=='\n' or line=="" or len(line)==0:
+        elif line=='\n' or line=="" or len(line)==0:
             continue
         if  re.search("#",line)!=None:
             print("Skipping Line")
