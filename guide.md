@@ -78,11 +78,17 @@ will both be consider to be two different release. However if you had
 That could lead to issues as now the sescond type of matching would not work. As the size match would be off
 #### File
 File scans are much the same as folder scan. If the information matches then the torrent is downloaded or output to file. However the check is based on the path on the txt file
-## Other
-### Missing
-How it works is if for example we have a avengers remux, and the site has no avengers remux uploaded, then that will be written to the output2 file.
+
+
+## Missing
+How it works is if for example we have a avengers remux, and the site has no avengers remux uploaded, then that will be written to the misstxt file.
 Also if we have an encode that has not been upload. Even if an encode already exist your encode will be added to the list.
 The result is that one will now have an easy to use list of potential files to upload
+
+
+## Other
+
+
 ### Note on Ignore
 Ignore is used by fd to find what directories to disregard.
 Ignore folders will never be added as a directory during a scan. However sub-folders of a ignore folder be added if the ignore folder is chosen as root. 
