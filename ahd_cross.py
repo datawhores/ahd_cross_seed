@@ -150,7 +150,6 @@ def download(arguments,txt):
         if os.path.isdir(line)==True:
             download_folder(arguments,txt,line,source,errorfile)
         elif os.path.isfile(line)==True:
-            print("false")
             download_file(arguments,txt,line,source,errorfile)
         else:
             print("File or Dir Not found")
