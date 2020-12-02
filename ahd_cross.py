@@ -159,7 +159,7 @@ def download(arguments,txt):
             errorpath.close()
             continue
         print("Waiting 5 Seconds")
-        # time.sleep(5)
+        time.sleep(5)
 def scan(arguments,txt):
     source=releasetype(arguments)
     list=open(txt,"r")
