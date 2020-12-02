@@ -6,10 +6,10 @@ However, any commandline option you pick will overide the config option
 You need to generate a list of files and Directories. The output is controled by either 
 * --txt in the commandline or
 * [txt] in the config file
-### radarrt
+    ### radarrt
  radarrrt: These type of folders are created by a program like radarr, this scanner could work with other types of directories. But please read to make sure that your directories are compatible. 
  
- #### Scanner info
+        #### Scanner info
  * Search for .mkv files
  * Search 2 Levels max within the choosen root folder. I.e the folder itself is root 0, subfolder are 1, a potential .mkv would be level 2
 I have /drive/Movies/ with all my movie files. So I choose that as the raddarrt
