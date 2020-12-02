@@ -7,7 +7,7 @@ Usage:
     [--config <config>][--delete][--fd <b--inary_fd> --fdignore <gitignore_style_ignorefile> ]
     ahd_cross.py grab [--txt=<txtloc--ation> --lines-skip <num_lines_skipped>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
     [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
-    ahd_cross.py missing [--txt=<txtlocation> --output2 <output>  --api <apikey>][--config <config>]
+    ahd_cross.py missing [--txt=<txtlocation> --misstxt <output>  --api <apikey>][--config <config>]
     ahd_cross.py dedupe --txt=<txtlocation>
 
 
@@ -43,7 +43,7 @@ other OS may need to input this manually
   "1080p Remux Files,2160 Remux Files or etc files" in a directory match the size of the ahd response(optional)   [default: 1]
 
   ahd_cross.py missing
-  --output2 <txt_where_potential_uploads_are written> here we output to a txt file files that don't have any uploads. This means that we can potentially upload these, for rank. Or to increase the amount of cross seeds we have
+  --misstxt <txt_where_potential_uploads_are written> here we output to a txt file files that don't have any uploads. This means that we can potentially upload these, for rank. Or to increase the amount of cross seeds we have
 
 
   ahd_cross.py dedupe
@@ -105,8 +105,8 @@ def createconfig(arguments):
         arguments['--torrent']=config['grab']['torrent']
     if arguments['--output']==None:
         arguments['--output']=config['grab']['output']
-    if arguments['--output2']==None:
-        arguments['--output2']=config['grab']['output2']
+    if arguments['--misstxt']==None:
+        arguments['--misstxt']=config['grab']['misstxt']
     if arguments['--exclude']==[] or  arguments['--exclude']==None:
         arguments['--exclude']=config['grab']['exclude']
     if arguments['--radarrt']==[] or  arguments['--radarrt']==None:
@@ -159,7 +159,7 @@ def download(arguments,txt):
             errorpath.close()
             continue
         print("Waiting 5 Seconds")
-        time.sleep(5)
+        # time.sleep(5)
 def scan(arguments,txt):
     source=releasetype(arguments)
     list=open(txt,"r")
@@ -292,10 +292,10 @@ if __name__ == '__main__':
     elif arguments['grab']:
         download(arguments,file)
     elif arguments['missing']:
-        if arguments['--output2']=='':
-            print("output2 must be configured for missing scan ")
+        if arguments['--misstxt']=='':
+            print("misstxt must be configured for missing scan ")
             quit()
         scan(arguments,file)
-        duperemove(arguments['--output2'])
+        duperemove(arguments['--misstxt'])
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
