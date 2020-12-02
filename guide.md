@@ -78,21 +78,29 @@ will both be consider to be two different release. However if you had
 That could lead to issues as now the sescond type of matching would not work. As the size match would be off
 #### File
 File scans are much the same as folder scan. If the information matches then the torrent is downloaded or output to file. However the check is based on the path on the txt file
-## Other
-### Missing
+
+
+
+## Missing
 How it works is if for example we have a avengers remux, and the site has no avengers remux uploaded, then that will be written to the output2 file.
 Also if we have an encode that has not been upload. Even if an encode already exist your encode will be added to the list.
 The result is that one will now have an easy to use list of potential files to upload
+
+
+## Other
+
+
 ### Note on Ignore
 Ignore is used by fd to find what directories to disregard.
 Ignore folders will never be added as a directory during a scan. However sub-folders of a ignore folder be added if the ignore folder is chosen as root. 
 If we chose a file to be ignored, then since we can't cd into a file that file will always be ignored. 
+
 ### Errors
 Their are numerous reason for errors. Somes Python just can't get the size of a file if it is moutned. Other times AHD has network issues, and the api won't work. We try to skip over these errors and move onto the next file. If for some reason something happens. We have the errors file which is created when the program starts, and is updated until it ends.
+
 ### Notes
 Running this everyday would be excessive especially on a large library. I would recommend using a scheduler. Linux has cron(not a big fan), jobber, cronicle. 
 Windows has the task scheduler. With any you used be able to set the program to run every week
-### New Feature
- File scan now we can check individual files for matches probably most useful for Movies. With this we are going to change how the scanning option scans radarr type folders to output the individual file, and not the diretory
+
 ### Future Feature
 Replace all print statements with proper console so user can't select how much to show
