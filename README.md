@@ -57,7 +57,7 @@ Downloading:cross.py grab --txt=(txtlocation) --torrent (torrents_download)  --o
     --exclude ; -e For any directory this type of file will not be checked for possible cross seeds
     --fd fd is a program for finding files if you can't install to system path you can put the location of the binary using this option. Note: a binary is included in this repo
 
-missing:ahd_cross.py grab --txt=(txtlocation) --api (apikey)  --output2
+missing:ahd_cross.py grab --txt=(txtlocation) --api (apikey)  --missingtxt
 
 ```
  This is meant to find files in your libary that can potentially be uploaded to a site. Note the get_missing file has a section marked, that can and should be changed based on site. It would be impossible to make this work easily with the vast variety of site rules out their. However, the default assumes that a site only allows one of every type of upload.
