@@ -72,6 +72,7 @@ from files import *
 
 
 
+
 def duperemove(txt):
     print("Removing Duplicate lines from ",txt)
     if txt==None:
@@ -212,6 +213,7 @@ def set_ignored(arguments,ignore):
         ignore.write(element)
         ignore.write('\n')
 def searchtv(arguments,ignorefile):
+  workingdir=os.getcwd()
   if arguments['--sonarrt']==[] or arguments['--sonarrt']==None or len(arguments['--sonarrt'])==0:
       return
   folders=open(arguments['--txt'],"a+")
@@ -224,9 +226,10 @@ def searchtv(arguments,ignorefile):
       if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-      subprocess.run([arguments['--fd'],'Season\s[0-9][0-9]$','-t','d','--full-path',root,'--ignore-file',ignorefile],stdout=folders)
+      t=subprocess.run([arguments['--fd'],'Season\s[0-9][0-9]$','-t','d','.',root,'--max-depth','2','--min-depth','2','--ignore-file',ignorefile],stdout=folders)
   print("Done")
 def searchmovies(arguments,ignorefile):
+    workingdir=os.getcwd()
     print(arguments['--radarrt'])
     if arguments['--radarrt']==[] or arguments['--radarrt']==None or len(arguments['--radarrt'])==0:
         return
@@ -240,10 +243,11 @@ def searchmovies(arguments,ignorefile):
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-    subprocess.run([arguments['--fd'],'\)$','-t','d','--full-path',root,'--ignore-file',ignorefile],stdout=folders)
+    #old scanning method
+    #subprocess.run([arguments['--fd'],'\)$','-t','d','--full-path',root,'--ignore-file',ignorefile],stdout=folders)
+        t=subprocess.run([arguments['--fd'],'-e','.mkv','-t','f','.',root,'--max-depth','2','--ignore-file',ignorefile],stdout=folders)
     print("Done")
 def searchnormal(arguments,ignorefile):
-    workingdir=os.getcwd()
     if arguments['--normalrt']==[] or arguments['--normalrt']==None:
         return
     folders=open(arguments['--txt'],"a+")
@@ -256,15 +260,14 @@ def searchnormal(arguments,ignorefile):
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-        os.chdir(root)
         subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders)
         subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders)
     print("Done")
-    os.chdir(workingdir)
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
     createconfig(arguments)
     file=arguments['--txt']
+    os.chdir(Path.home())
     try:
         open(file,"a+").close()
     except:
@@ -275,6 +278,7 @@ if __name__ == '__main__':
         if arguments['--delete']:
             open(file, 'w').close()
         fdignore=arguments['--fdignore']
+
         if fdignore==None:
             try:
                 fdignore=os.environ['HOME'] + "/.fdignore"
