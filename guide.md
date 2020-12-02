@@ -14,8 +14,9 @@ You need to generate a list of files and Directories. The output is controled by
  * Search 2 Levels max within the choosen root folder. I.e the folder itself is root 0, subfolder are 1, a potential .mkv would be level 2
 I have /drive/Movies/ with all my movie files. So I choose that as the raddarrt
 an example output could be. 
-i.e /drive/Movie/2010/ I would need to add each one of those seperatly
- drive/Movies/Eraserhead (1977)/Eraserhead.1977.RERIP.Criterion.BluRay.Remux.1080p.AVC.FLAC.2.0-HiFi.mkv
+
+ ```
+drive/Movies/Eraserhead (1977)/Eraserhead.1977.RERIP.Criterion.BluRay.Remux.1080p.AVC.FLAC.2.0-HiFi.mkv
  /drive/Movies/Escape from the Planet of the Apes (1971)/Escape.From.the.Planet.of.the.Apes.1971.BluRay.Remux.1080p.AVC.DTS-HD.MA.5.1-SCard.mkv
  /drive/Movies/EuroTrip (2004)/Eurotrip 2004 BDRemux 1080p AVC DTS-HD 5.1-HighCode.mkv
  /drive/Movies/Evangelion 1.0 You Are (Not) Alone (2007)/Evangelion - 1.0 - You Are (Not) Alone (2007).mkv
@@ -33,6 +34,8 @@ i.e /drive/Movie/2010/ I would need to add each one of those seperatly
  /drive/Movies/Eyes Wide Shut (1999)/Eyes Wide Shut 1999 Repack 1080p Blu-ray Remux VC-1 DTS-HD MA 5.1 - KRaLiMaRKo.mkv
  /drive/Movies/Falling Down (1993)/Falling.Down.1993.1080p.Remux.VC-1.TrueHD.2.0-playBD.mkv
  /drive/Movies/Falling Down (1993)/Falling.Down.1993.BluRay.Remux.1080p.VC1.TrueHD.2.0-BMF.mkv
+```
+
 ### sonarrt
 sonarrt: These type of folders are created by a program like sonnar, teh scanner will look for these type of folders(ending in Season XX), then add that directory to the scanning list
  #### Scanner info
@@ -42,6 +45,7 @@ sonarrt: These type of folders are created by a program like sonnar, teh scanner
  
  I have /drive/TV/ with all my TV files. So I choose that as the sonarrt
 an example output could be. 
+```
  /drive/TV/Smallville/Season 01
  /drive/TV/Smallville/Season 02
  /drive/TV/Smallville/Season 03
@@ -52,6 +56,8 @@ an example output could be.
  /drive/TV/Smallville/Season 08
  /drive/TV/Smallville/Season 09
  /drive/TV/Smallville/Season 10
+```
+
 ### normalrtt:
 normalrtt: These type of folders will be scan much the same as the ls or dir command. So every file or directory will be added to the scanning list. As they appear in the directory chosen. 
 ## Grabbing
