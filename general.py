@@ -2,6 +2,7 @@ from datetime import date,timedelta, datetime
 from classes import *
 import requests
 import xmltodict
+import subprocess
 """
 General Functions
 """
@@ -86,7 +87,7 @@ def get_matches(errorfile,arguments,files):
         if querygroup==fileguessit.get_group():
             group=True
         if queryresolution==fileguessit.get_resolution():
-            resolution==True
+            resolution=True
         if datefilter < querydate:
             filedate=True
         if difference(querysize,filesize)<.01:
@@ -106,6 +107,7 @@ def get_matches(errorfile,arguments,files):
             name=(element['name']+ "." + element['year']+ "." + element['media']+ "." + element['resolution']+ "." + element['encoding']). replace(" ",".")
             torrent=torrentfolder + ("[ahd]"+ name +".torrent").replace("/", "_")
             print(torrent,'\n',link)
+            subprocess.run(['wget','--load-cookies',cookie,link,'-O',torrent])
             try:
                 subprocess.run(['wget','--load-cookies',cookie,link,'-O',torrent])
             except:
@@ -114,7 +116,7 @@ def get_missing(errorfile,arguments,files,encode=None):
     if encode==None:
         encode=False
     api=arguments['--api']
-    output=arguments['--output2']
+    output=arguments['--misstxt']
     file=files.get_first()
     if file=="No Files":
         return
@@ -244,5 +246,3 @@ def lower(input):
     else:
         input=input.lower()
         return input
-
- 
