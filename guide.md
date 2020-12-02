@@ -9,7 +9,7 @@ You need to generate a list of files and Directories. The output is controled by
 ### radarrt
  radarrrt: These type of folders are created by a program like radarr, this scanner could work with other types of directories. But please read to make sure that your directories are compatible. 
  
- #### Scanner info
+ ##### Scanner info
  * Search for .mkv files
  * Search 2 Levels max within the choosen root folder. I.e the folder itself is root 0, subfolder are 1, a potential .mkv would be level 2
 I have /drive/Movies/ with all my movie files. So I choose that as the raddarrt
@@ -38,7 +38,7 @@ drive/Movies/Eraserhead (1977)/Eraserhead.1977.RERIP.Criterion.BluRay.Remux.1080
 
 ### sonarrt
 sonarrt: These type of folders are created by a program like sonnar, teh scanner will look for these type of folders(ending in Season XX), then add that directory to the scanning list
- #### Scanner info
+ ##### Scanner info
  * Search for folders ending in Season XX
  * Search 2 Levels within the choosen root folder. I.e the folder itself is root 0, show folders are 1, a potential season XX would be level 2
  
