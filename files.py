@@ -75,7 +75,7 @@ class File:
     """
     Scanning File Functions
     """
-def download_file(arguments,txt,line,source,erropath):
+def download_file(arguments,txt,line,source,errorpath):
     folders=open(txt,"r")
     currentfile=File(line,arguments,source)
     currentfile.set_valid()
