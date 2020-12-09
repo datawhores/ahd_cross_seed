@@ -315,16 +315,15 @@ if __name__ == '__main__':
         arguments['--config']=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
     if arguments['scan']!=True and arguments['dedupe']!=True and arguments['grab']!=True and arguments['missing']!=True:
             message_dialog(
-                title="Config Creator",
+                title="Interactive Mode",
                 text="Welcome to AHD Cross you are starting the programs in interactive Mode\nBefore Deciding on the next question note a config File is required in this mode",
             ).run()
             startconfig = button_dialog(
-                title="Do you have a config File",
+                title="Start Config Wizard",
                 buttons=[("Yes", True), ("No", False)],
             ).run()
-            if startconfig==False:
+            if startconfig:
                 createconfig(config)
-            setup(arguments)
             continueloop =True
             while continueloop!=None:
 
@@ -335,6 +334,7 @@ if __name__ == '__main__':
                     ("missing", "Upload Finder"),
                     ("scan", "Update Folder/Files"),
                     ("config", "Change Config Location"),
+                    ("config2", "Start Config Wizard")
                 ],
                 title="Interactive Mode",
                 text="",
@@ -342,6 +342,7 @@ if __name__ == '__main__':
                 if continueloop==None:
                     quit()
                 elif continueloop=="scan":
+                    setup(arguments)
                     setupscan(arguments)
                     set_ignored(arguments)
                     duperemove(arguments['--fdignore'])
@@ -350,9 +351,11 @@ if __name__ == '__main__':
                     searchnormal(arguments,arguments['--fdignore'])
                     duperemove(arguments['--txt'])
                 elif continueloop=="missing":
+                    setup(arguments)
                     missing(arguments)
                     duperemove(arguments['--misstxt'])
                 elif continueloop=="download":
+                    setup(arguments)
                     download(arguments,arguments['--txt'])
                 elif continueloop=="config":
                     arguments['--config']=input_dialog(title='Config Path',text='Please Enter the Path to your Config File:').run()
@@ -362,6 +365,8 @@ if __name__ == '__main__':
                         title="Options Change",
                         text=info
                     ).run()
+                elif continueloop=="config2":
+                    createconfig(config)
 
 
 
