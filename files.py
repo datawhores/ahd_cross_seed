@@ -12,10 +12,13 @@ class File:
         self.source=source
         self.arguments=arguments
         self.name=file.rstrip("\n")
+        self.dir="0"
         self.date=datetime.now().strftime("%m.%d.%Y")
         self.valid=None
         self.encode=None
         self.type=None
+    def get_dir(self):
+        return self.dir
     def get_name(self):
         return self.name
     def get_first(self):
@@ -36,9 +39,8 @@ class File:
             return
         self.size=os.path.getsize(self.get_name())
     def set_valid(self):
-        if re.search("[sS][aA][mM][pP][lL][eE]",self.name)!=None or re.search("[tT][rR][aA][iL][eE][rR]",self.name)!=None:
-            self.valid=False
-        elif re.search("[rR][eE][mM][uU][xX]",self.name)!=None and self.source['remux']=='yes':
+        #set valid
+        if re.search("[rR][eE][mM][uU][xX]",self.name)!=None and self.source['remux']=='yes':
             self.valid=True
         elif re.search("[rR][eE][mM][uU][xX]",self.name)==None and re.search("[bB][lL][uU]",self.name)!=None and self.source['blu']=='yes':
             self.valid=True
@@ -46,11 +48,23 @@ class File:
             self.valid=True
         elif re.search("[hH][dD][tT][vV]",self.name)!=None and self.source['tv']=='yes':
             self.valid=True
+        #set invalid
+        elif re.search("[sS][aA][mM][pP][lL][eE]",self.name)!=None or re.search("[tT][rR][aA][iL][eE][rR]",self.name)!=None:
+            self.valid=False
+        elif re.search("[rR][eE][mM][uU][xX]",self.name)!=None and self.source['remux']=='no':
+            self.valid=False
+        elif re.search("[rR][eE][mM][uU][xX]",self.name)==None and re.search("[bB][lL][uU]",self.name)!=None and self.source['blu']=='no':
+            self.valid=False
+        elif re.search("[wW][eE][bB]",self.name)!=None and self.source['web']=='no':
+            self.valid=False
+        elif re.search("[hH][dD][tT][vV]",self.name)!=None and self.source['tv']=='no':
+            self.valid=False
         else:
             self.valid=True
     def set_type(self):
         if re.search("[rR][eE][mM][uU][xX]",self.name)!=None and self.source['remux']=='yes':
             self.type="Remux"
+
         elif re.search("[rR][eE][mM][uU][xX]",self.name)==None and re.search("[bB][lL][uU]",self.name)!=None and self.source['blu']=='yes':
             self.type="Blu-Ray"
         elif re.search("[wW][eE][bB]",self.name)!=None and self.source['web']=='yes':
@@ -88,7 +102,8 @@ def download_file(arguments,txt,line,source,errorpath):
     """
     Missing files Functions
     """
-def scan_file(arguments,txt,line,source,errorpath):
+def scan_file(arguments,line,source,errorpath):
+    txt=arguments['--txt']
     folders=open(txt,"r")
     currentfile=File(line,arguments,source)
     currentfile.set_valid()
@@ -96,6 +111,7 @@ def scan_file(arguments,txt,line,source,errorpath):
         currentfile.set_size()
         currentfile.set_encode()
         currentfile.set_type()
-        get_matches(errorpath,arguments,currentfile,currentfile.get_encode())
+        get_missing(errorpath,arguments,currentfile,currentfile.get_encode())
     if currentfile.get_valid()==False:
+        print("Type excluded")
         return
