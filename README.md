@@ -24,6 +24,11 @@ python3 -m venv /path/to/new/virtual/environment then you can use do something l
 **How to use**
 commandline options can be loaded with --config or -x config. If using a config file then a commandline option overwrites what is in the config
 
+You can run with 
+1. ahd_cross.py --config path
+2. ahd_cross.py --options --option ....(make sure to fill out all required options)
+3. ahd_cross.py (This will start the interactive wizard)
+
 scanning:cross.py scan --txt=txtlocation --mvr folder(s) and or --tvr folder(s)
 note: you need to put a mvt or tvr for each different folder 
 
