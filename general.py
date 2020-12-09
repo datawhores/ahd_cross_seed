@@ -255,16 +255,6 @@ def lower(input):
         return input
 def createconfig(config):
     configpath=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
-    option=True
-    if os.path.isfile(configpath):
-        txt="overwrite existing file: "+configpath
-        option = button_dialog(
-             title=txt,
-             buttons=[("Yes", True), ("No", False)],
-        ).run()
-    if option==False:
-        quit()
-
     config.read(configpath)
 
 
@@ -468,7 +458,8 @@ It treats every file or folder max 1 depth as as an entry\n/root/dir and /root/m
 
 
     size = button_dialog(
-         title="Check for File Sizes\nAdds another way to match files if True",
+         title="Check for File Sizes",
+         text="Adds another way to match files if True",
          buttons=[("Yes", "True"), ("No", "False")],
     ).run()
     config.set('grab', "size", size)
@@ -487,7 +478,31 @@ It treats every file or folder max 1 depth as as an entry\n/root/dir and /root/m
                  buttons=[("Yes", True), ("No", False)],
             ).run()
 
+    sections = config.sections()
+    config_string=""
+    for section in sections:
+        options = config.options(section)
+        for option in options:
+              temp_dict={}
+              temp_dict[option] = config.get(section,option)
+              config_string=config_string+str(temp_dict)+"\n"
 
 
+
+
+
+
+    txt="These are the Options that will be written to the configfile\nPlease Confirm if you want to save these Options\n Current File wil be overwritten\n\n"+config_string
+
+
+
+    option = button_dialog(
+             title="Confirm Options",
+             text=txt,
+             buttons=[("Yes", True), ("No", False)],
+    ).run()
+    if option==False:
+        return
     with open(configpath, 'w') as configfile:
+      print("Writing to configfile")
       config.write(configfile)
