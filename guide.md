@@ -1,4 +1,4 @@
-#Interactive Wizard
+# Interactive Wizard
 Note an interactive Mode can now be Started
 This is done by running the program with no arguments
 
