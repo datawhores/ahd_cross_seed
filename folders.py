@@ -168,7 +168,8 @@ class Folder:
     """
     Missing files Functions
     """
-def scan_folder(arguments,txt,line,source,errorfile):
+def scan_folder(arguments,line,source,errorfile):
+    txt=arguments['--txt']
     folders=open(txt,"r")
     if source['remux']=='yes':
         files=tempfile.NamedTemporaryFile('w+')
@@ -307,8 +308,6 @@ def scan_folder(arguments,txt,line,source,errorfile):
         webdl4.set_size()
         get_missing(errorfile,arguments,webdl4)
         files.close()
-    print("Waiting 5 Seconds")
-    time.sleep(5)
 ###
 
     """
