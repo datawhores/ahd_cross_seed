@@ -1,12 +1,19 @@
 #! /usr/bin/env python3
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
-    ahd_cross.py
+    ahd_cross.py [--txt=<txtlocation>][--radarrt <movie_root(s)>]... [--sonarrt <tv_root(s)>]... [--normalrt <normal_root(s)>]...
+    [--ignore <sub_folders_to_ignore>]...[--exclude <source_excluded>]...
+    [--config <config>][--delete][--fd <binary_fd> --fdignore <gitignore_style_ignorefile> --lines-skip <num_lines_skipped>]
+    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --size <t_or_f> --misstxt <output>]
+    ahd_cross.py interactive [--txt=<txtlocation>][--radarrt <movie_root(s)>]... [--sonarrt <tv_root(s)>]... [--normalrt <normal_root(s)>]...
+    [--ignore <sub_folders_to_ignore>]...[--exclude <source_excluded>]...
+    [--config <config>][--delete][--fd <binary_fd> --fdignore <gitignore_style_ignorefile> --lines-skip <num_lines_skipped>]
+    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --size <t_or_f> --misstxt <output>]
     ahd_cross.py (-h | --help)
     ahd_cross.py scan [--txt=<txtlocation>]
     [--radarrt <movie_root(s)>]... [--sonarrt <tv_root(s)>]... [--normalrt <normal_root(s)>]... [--ignore <sub_folders_to_ignore>]...
-    [--config <config>][--delete][--fd <b--inary_fd> --fdignore <gitignore_style_ignorefile> ]
-    ahd_cross.py grab [--txt=<txtloc--ation> --lines-skip <num_lines_skipped>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
+    [--config <config>][--delete][--fd <binary_fd> --fdignore <gitignore_style_ignorefile> ]
+    ahd_cross.py grab [--txt=<txtlocation> --lines-skip <num_lines_skipped>][--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey>]
     [--config <config>][--date <int> --fd <binary_fd> --size <t_or_f>][--exclude <source_excluded>]...
     ahd_cross.py missing [--txt=<txtlocation> --misstxt <output>  --api <apikey>][--config <config>]
     ahd_cross.py dedupe --txt=<txtlocation>
@@ -92,6 +99,10 @@ def duperemove(txt):
         outfile.write(line)
     outfile.close()
 def updateargs(arguments):
+    configpath=arguments.get('--config')
+    if os.path.isfile(configpath)==False:
+        print("Could Not Read Config Path")
+        return arguments
     try:
         configpath=arguments.get('--config')
         config.read(configpath)
@@ -210,15 +221,25 @@ def missing(arguments):
 
         print("Waiting 5 Seconds")
         # time.sleep(5)
-def setup(arguments):
+def setup(arguments,interactive=None):
+    if interactive==None:
+        interactive=False
     updateargs(arguments)
     file=arguments['--txt']
     os.chdir(Path.home())
     try:
         open(file,"a+").close()
     except:
-        print("No txt file")
-        quit()
+        if interactive==False:
+            print("No txt file")
+            quit()
+        else:
+            message_dialog(
+                title="Interactive Mode",
+                text="Unable to read text file\nPlease Change Config Location\nOr Start Config Wizard",
+            ).run()
+            return False
+
 def setupscan(arguments):
     print("Scanning for folders")
     if arguments['--delete']:
@@ -313,7 +334,7 @@ if __name__ == '__main__':
 
     if arguments.get("--config")==None:
         arguments['--config']=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
-    if arguments['scan']!=True and arguments['dedupe']!=True and arguments['grab']!=True and arguments['missing']!=True:
+    if (arguments['scan']!=True and arguments['dedupe']!=True and arguments['grab']!=True and arguments['missing']!=True) or arguments['interactive']:
             message_dialog(
                 title="Interactive Mode",
                 text="Welcome to AHD Cross you are starting the programs in interactive Mode\nBefore Deciding on the next question note a config File is required in this mode",
@@ -342,7 +363,9 @@ if __name__ == '__main__':
                 if continueloop==None:
                     quit()
                 elif continueloop=="scan":
-                    setup(arguments)
+                    t=setup(arguments,True)
+                    if t==False:
+                        continue
                     setupscan(arguments)
                     set_ignored(arguments)
                     duperemove(arguments['--fdignore'])
@@ -351,15 +374,21 @@ if __name__ == '__main__':
                     searchnormal(arguments,arguments['--fdignore'])
                     duperemove(arguments['--txt'])
                 elif continueloop=="missing":
-                    setup(arguments)
+                    t=setup(arguments,True)
+                    if t==False:
+                        continue
                     missing(arguments)
                     duperemove(arguments['--misstxt'])
                 elif continueloop=="download":
-                    setup(arguments)
+                    t=setup(arguments,True)
+                    if t==False:
+                        continue
                     download(arguments,arguments['--txt'])
                 elif continueloop=="config":
                     arguments['--config']=input_dialog(title='Config Path',text='Please Enter the Path to your Config File:').run()
-                    setup(arguments)
+                    t=setup(arguments,True)
+                    if t==False:
+                        continue
                     info="Please Check if the arguments are correct for New Config\nIf not their was probably an issue reading the file\nNote all that matters for this mode are the entries with -- at the beginning\n\n"+ str(arguments)
                     message_dialog(
                         title="Options Change",
@@ -367,6 +396,7 @@ if __name__ == '__main__':
                     ).run()
                 elif continueloop=="config2":
                     createconfig(config)
+                    setup(arguments,True)
 
 
 
