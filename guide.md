@@ -1,3 +1,8 @@
+#Interactive Wizard
+Note an interactive Mode can now be Started
+This is done by running the program with no arguments
+
+
 # Getting Started
 ## Config vs [Commandline options i.e what appeares when you do -h]
 Config is recommend to set a base. With that you only need to call -c [config file path]
