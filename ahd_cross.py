@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
+    ahd_cross.py
     ahd_cross.py (-h | --help)
     ahd_cross.py scan [--txt=<txtlocation>]
     [--radarrt <movie_root(s)>]... [--sonarrt <tv_root(s)>]... [--normalrt <normal_root(s)>]... [--ignore <sub_folders_to_ignore>]...
@@ -68,10 +69,13 @@ config = configparser.ConfigParser(allow_no_value=True)
 from folders import *
 from classes import *
 from files import *
+from prompt_toolkit.shortcuts import button_dialog
 
 
 
-
+"""
+Setup Function
+"""
 
 def duperemove(txt):
     print("Removing Duplicate lines from ",txt)
@@ -87,11 +91,12 @@ def duperemove(txt):
     for line in lines_seen:
         outfile.write(line)
     outfile.close()
-def createconfig(arguments):
+def updateargs(arguments):
     try:
         configpath=arguments.get('--config')
         config.read(configpath)
     except:
+        print("Could Not Read Config Path")
         return arguments
     if arguments['--txt']==None:
         arguments['--txt']=config['general']['txt']
@@ -106,7 +111,7 @@ def createconfig(arguments):
     if arguments['--output']==None:
         arguments['--output']=config['grab']['output']
     if arguments['--misstxt']==None:
-        arguments['--misstxt']=config['grab']['misstxt']
+        arguments['--misstxt']=config['general']['misstxt']
     if arguments['--exclude']==[] or  arguments['--exclude']==None:
         arguments['--exclude']=config['grab']['exclude']
     if arguments['--radarrt']==[] or  arguments['--radarrt']==None:
@@ -122,9 +127,15 @@ def createconfig(arguments):
     return arguments
 def releasetype(arguments):
     source={'remux':'yes','web':'yes','blu':'yes','tv':'yes','other':'yes'}
+    if arguments['--exclude']==None or arguments['--exclude']==[] or arguments['--exclude']=="" or len(arguments['--exclude'])==0:
+        return source
+    if type(arguments['--exclude'])==str:
+        arguments['--exclude']=arguments['--exclude'].split(",")
     for element in arguments['--exclude']:
+        if element=="":
+            continue
         try:
-            source[element]="No"
+            source[element]="no"
         except KeyError:
             pass
     return source
@@ -151,6 +162,7 @@ def download(arguments,txt):
             download_folder(arguments,txt,line,source,errorfile)
         elif os.path.isfile(line)==True:
             download_file(arguments,txt,line,source,errorfile)
+
         else:
             print("File or Dir Not found")
             errorpath=open(errorfile,"a+")
@@ -160,14 +172,17 @@ def download(arguments,txt):
             continue
         print("Waiting 5 Seconds")
         time.sleep(5)
-def scan(arguments,txt):
+def missing(arguments):
+    if arguments['--misstxt']=='' or len(arguments['--misstxt'])==0 or arguments['--misstxt']==None:
+        print("misstxt must be configured for missing scan ")
+        quit()
     source=releasetype(arguments)
-    list=open(txt,"r")
+    list=open(arguments['--txt'],"r")
+    index=0
     errorfile=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
     if os.path.isdir(errorfile)==False:
             os.mkdir(errorfile)
     errorfile=errorfile+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
-
     for line in list:
         index=index+1
         print('\n',line)
@@ -180,10 +195,11 @@ def scan(arguments,txt):
             print("Skipping Line")
             continue
         line=line.rstrip("\n")
+
         if os.path.isdir(line)==True:
-            scan_folder(arguments,txt,line,source,errorfile)
-        if os.path.isfile(line)==True:
-            scan_file(arguments,txt,line,source,errorfile)
+            scan_folder(arguments,line,source,errorfile)
+        elif os.path.isfile(line)==True:
+            scan_file(arguments,line,source,errorfile)
         else:
             print("File or Dir Not found")
             errorpath=open(errorfile,"a+")
@@ -193,22 +209,47 @@ def scan(arguments,txt):
             continue
 
         print("Waiting 5 Seconds")
-        time.sleep(5)
+        # time.sleep(5)
+def setup(arguments):
+    updateargs(arguments)
+    file=arguments['--txt']
+    os.chdir(Path.home())
+    try:
+        open(file,"a+").close()
+    except:
+        print("No txt file")
+        quit()
+def setupscan(arguments):
+    print("Scanning for folders")
+    if arguments['--delete']:
+        open(file, 'w').close()
+    fdignore=arguments['--fdignore']
+    if fdignore==None:
+        try:
+            arguments['--fdignore']=os.path.dirname(os.path.abspath(__file__))+ "/.fdignore"
+        except:
+            print("Error setting fdignore")
+            exit()
+    t=open(arguments['--fdignore'], 'w')
+    t.close()
+
 """
 Scanning Functions
 """
-def set_ignored(arguments,ignore):
-    if ignore==None:
+def set_ignored(arguments):
+    ignore=arguments.get("--fdignore")
+    if ignore==None or ignore==[] or ignore=="" or len(ignore)==0:
        return
-    try:
-        ignorelist=arguments['--ignore'].split(',')
-    except:
-         ignorelist=arguments['--ignore']
+    if type(arguments['--ignore'])==str:
+        arguments['--ignore']=arguments['--ignore'].split(",")
+    ignorelist=arguments['--ignore']
     if len(ignorelist)==0:
         return
     open(ignore,"w+").close()
     ignore=open(ignore,"a+")
     for element in ignorelist:
+        if element=="":
+            continue
         ignore.write(element)
         ignore.write('\n')
 def searchtv(arguments,ignorefile):
@@ -217,11 +258,12 @@ def searchtv(arguments,ignorefile):
       return
   folders=open(arguments['--txt'],"a+")
   print("Adding TV Folders to",arguments['--txt'])
-  try:
-    list=arguments['--sonarrt'].split(',')
-  except:
-    list=arguments['--sonarrt']
+  if type(arguments['--sonarrt'])==str:
+      arguments['--sonarrt']=arguments['--sonarrt'].split(",")
+  list=arguments['--sonarrt']
   for root in list:
+      if root=="":
+          continue
       if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
@@ -229,16 +271,16 @@ def searchtv(arguments,ignorefile):
   print("Done")
 def searchmovies(arguments,ignorefile):
     workingdir=os.getcwd()
-    print(arguments['--radarrt'])
     if arguments['--radarrt']==[] or arguments['--radarrt']==None or len(arguments['--radarrt'])==0:
         return
     folders=open(arguments['--txt'],"a+")
     print("Adding Movies Folders to", arguments['--txt'])
-    try:
-        list=arguments['--radarrt'].split(',')
-    except:
-        list=arguments['--radarrt']
+    if type(arguments['--radarrt'])==str:
+        arguments['--radarrt']=arguments['--radarrt'].split(",")
+    list=arguments['--radarrt']
     for root in list:
+        if root=="":
+          continue
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
@@ -251,51 +293,94 @@ def searchnormal(arguments,ignorefile):
         return
     folders=open(arguments['--txt'],"a+")
     print("Adding Normal Folders to", arguments['--txt'])
-    try:
-        list=arguments['--normalrt'].split(',')
-    except:
-        list=arguments['--normalrt']
+    if type(arguments['--normalrt'])==str:
+        arguments['--normalrt']=arguments['--normalrt'].split(",")
+    list=arguments['--normalrt']
     for root in list:
+        if root=="":
+          continue
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
         subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders)
         subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders)
     print("Done")
+
+#Main
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
-    createconfig(arguments)
-    file=arguments['--txt']
-    os.chdir(Path.home())
-    try:
-        open(file,"a+").close()
-    except:
-        print("No txt file")
-        quit()
-    if arguments['scan']:
-        print("Scanning for folders")
-        if arguments['--delete']:
-            open(file, 'w').close()
-        fdignore=arguments['--fdignore']
+#interactive Mode
 
-        if fdignore==None:
-            try:
-                fdignore=os.environ['HOME'] + "/.fdignore"
-            except:
-                print("You might be on windows make sure to pass --fdignore option")
-                exit()
-        duperemove(fdignore)
-        searchtv(arguments,fdignore)
-        searchmovies(arguments,fdignore)
-        searchnormal(arguments,fdignore)
+    if arguments.get("--config")==None:
+        arguments['--config']=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
+    if arguments['scan']!=True and arguments['dedupe']!=True and arguments['grab']!=True and arguments['missing']!=True:
+            message_dialog(
+                title="Config Creator",
+                text="Welcome to AHD Cross you are starting the programs in interactive Mode\nBefore Deciding on the next question note a config File is required in this mode",
+            ).run()
+            startconfig = button_dialog(
+                title="Do you have a config File",
+                buttons=[("Yes", True), ("No", False)],
+            ).run()
+            if startconfig==False:
+                createconfig(config)
+            setup(arguments)
+            continueloop =True
+            while continueloop!=None:
+
+                continueloop= radiolist_dialog(
+                values=[
+
+                    ("download", "Cross Seed Scan"),
+                    ("missing", "Upload Finder"),
+                    ("scan", "Update Folder/Files"),
+                    ("config", "Change Config Location"),
+                ],
+                title="Interactive Mode",
+                text="",
+                ).run()
+                if continueloop==None:
+                    quit()
+                elif continueloop=="scan":
+                    setupscan(arguments)
+                    set_ignored(arguments)
+                    duperemove(arguments['--fdignore'])
+                    searchtv(arguments,arguments['--fdignore'])
+                    searchmovies(arguments,arguments['--fdignore'])
+                    searchnormal(arguments,arguments['--fdignore'])
+                    duperemove(arguments['--txt'])
+                elif continueloop=="missing":
+                    missing(arguments)
+                    duperemove(arguments['--misstxt'])
+                elif continueloop=="download":
+                    download(arguments,arguments['--txt'])
+                elif continueloop=="config":
+                    arguments['--config']=input_dialog(title='Config Path',text='Please Enter the Path to your Config File:').run()
+                    setup(arguments)
+                    info="Please Check if the arguments are correct for New Config\nIf not their was probably an issue reading the file\nNote all that matters for this mode are the entries with -- at the beginning\n\n"+ str(arguments)
+                    message_dialog(
+                        title="Options Change",
+                        text=info
+                    ).run()
+
+
+
+#Non interactive Mode
+    if arguments['scan']:
+        setup(arguments)
+        setupscan(arguments)
+        set_ignored(arguments)
+        duperemove(arguments['--fdignore'])
+        searchtv(arguments,arguments['--fdignore'])
+        searchmovies(arguments,arguments['--fdignore'])
+        searchnormal(arguments,arguments['--fdignore'])
         duperemove(arguments['--txt'])
     elif arguments['grab']:
-        download(arguments,file)
+        setup(arguments)
+        download(arguments,arguments['--txt'])
     elif arguments['missing']:
-        if arguments['--misstxt']=='':
-            print("misstxt must be configured for missing scan ")
-            quit()
-        scan(arguments,file)
+        setup(arguments)
+        missing(arguments)
         duperemove(arguments['--misstxt'])
     elif arguments['dedupe']:
         duperemove(arguments['--txt'])
