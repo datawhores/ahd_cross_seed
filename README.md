@@ -23,7 +23,7 @@ python3 -m venv /path/to/new/virtual/environment then you can use do something l
 
 # Quick Guide:
 Please start here for a general overview of how to run this program. 
-## Scanning Directory
+### Scanning Directory
 
 `ahd_cross.py scan [arguments]` 
 
@@ -36,7 +36,7 @@ scan a directory will write the paths to a txt document
     --exclude ; -e Exclude certain types of videos from being added to txt file blu=encode,remux=remux,web=web-dl or web-rip orweb,tv=hdtv,other=badly named files
     --ignored ; -i this folder will be ignored completly, appends to .fdignore, so this should only need to be done once. 
 
-## Grabbing Downloads
+### Grabbing Downloads
 `ahd_cross.py grab [arguments]` 
 
 grab downloads using a list of the directories/files. Files can be generated manually or with this programs scanning function. If Scanning please note that 
@@ -56,7 +56,7 @@ grab downloads using a list of the directories/files. Files can be generated man
     --exclude ; -e For any directory this type of file will not be checked for possible cross seeds
     --fd fd is a program for finding files if you can't install to system path you can put the location of the binary using this option. Note: a binary is included in this repo
 
-## Find Files to Upload to AHD
+### Find Files to Upload to AHD
 `ahd_cross.py missing [arguments]`
 
 Will scan a directory and find any file that hasn't been uploaded to AHD. That also has a free slot on AHD. Any encode that hasn't been uploaded will be added 
@@ -67,12 +67,32 @@ Will scan a directory and find any file that hasn't been uploaded to AHD. That a
     optional
     [--exclude <source_excluded>... For any directory this type of file will not be checked for possible cross seeds
 
-## interactive
+### interactive
 `ahd_cross.py [arguments]` or `ahd_cross.py interactive [arguments]` 
 Start a gui version of the program
 
 
-# Arguments 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+``# Arguments 
 A more in-depth overview of some of the argument that can be passed to the program
 
 ## Config vs arguments
