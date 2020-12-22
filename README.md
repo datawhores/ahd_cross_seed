@@ -1,25 +1,20 @@
 # Install
-**Requirements:**
+### Clone the repository
+git clone https://gitlab.com/excludedBittern8/ahd_cross_seed
+cd ahd_cross_seed
 
-Python 3
+### Creating a virtual enviroment
+A Virtual environment is recommended
+On macOS and Linux:
 
-Modules
-- requests
-- guessit
-- docopt
-- xmltodict
-- IMDbPY
-- prompt_toolkit
+python3 -m pip install --user virtualenv
+On Windows:
 
-https://github.com/sharkdp/fd/releases - Note: Instructions say you need root to install the binary. But you don't need root to run it so I've included a version of it in the repo
+py -m pip install --user virtualenv
 
-Windows Users: Please follow the instructions on how to install fd on windows, on the link above
+### Add required modules
+./venv/bin/pip3 install -r requirements.txt
 
-Seedbox Users:
-
-python3 -m venv /path/to/new/virtual/environment then you can use do something like 
-/path/to/new/virtual/environment/pip install to install modules and
-/path/to/new/virtual/environment/python3 to run the program
 
 # Quick Guide``
 Please start here for a general overview of how to run this program. 
