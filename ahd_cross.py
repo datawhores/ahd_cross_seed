@@ -1,18 +1,18 @@
 #! /usr/bin/env python3
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
-    ahd_cross.py [(-h | --help) --txt=<txtlocation> --config <config> --delete --lines-skip <num_lines_skipped]
+    ahd_cross.py [(-h | --help) --txt=<txtlocation> --fd <fd> --config <config> --delete --lines-skip <num_lines_skipped]
+    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --size <t_or_f> --misstxt <output>]
+    [--root <normal_root(s)>... --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
+    ahd_cross.py interactive [--txt=<txtlocation> --fd <fd>  --config <config> --delete --lines-skip <num_lines_skipped]
     [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --size <t_or_f> --misstxt <output>]
     [--root <normal_root(s)>...  --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
-    ahd_cross.py interactive [--txt=<txtlocation> --config <config> --delete --lines-skip <num_lines_skipped]
-    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --size <t_or_f> --misstxt <output>]
-    [--root <normal_root(s)>...  --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
-    ahd_cross.py scan [--txt=<txtlocation> --config <config> --delete]
+    ahd_cross.py scan [--txt=<txtlocation> --fd <fd>  --config <config> --delete]
     [--root <normal_root(s)>... --ignore <sub_folders_to_ignore>...]
-    ahd_cross.py grab [--txt=<txtlocation> --lines-skip <num_lines_skipped> --torrent <torrents_download> --cookie <cookie> --output <output> ]
+    ahd_cross.py grab [--txt=<txtlocation> --fd <fd>  --lines-skip <num_lines_skipped> --torrent <torrents_download> --cookie <cookie> --output <output> ]
     [--api <apikey> --config <config> --date <int> --size <t_or_f>]
     [--exclude <source_excluded>]...
-    ahd_cross.py missing [--txt=<txtlocation> --misstxt <output>  --api <apikey> --config <config>]
+    ahd_cross.py missing [--txt=<txtlocation> --fd <fd>  --misstxt <output>  --api <apikey> --config <config>]
     [--exclude <source_excluded>...]
 
 
@@ -21,8 +21,7 @@ Options:
   --h ;--help     Show this screen
   --config ; -x <config> load arguments from a config file. Can be used alternatively/with ALL required arguments
   --txt <txtlocation>  txt file with all the file/directory name. Required for scan or grab
-
-
+  --fd  Use to replace the built in fd file. fd is used to search a folder using criteria pre-determined by this program
 ========================================================================================================================================================
 [interactive]
 Note:arguments can be blank for this action
@@ -105,12 +104,20 @@ def setFD():
     if sys.platform=="linux":
         try:
             subprocess.run(['fd'])
-            arguments['--fd']=fd
+            arguments['--fd']="fd"
         except:
             path=os.getcwd()
-            fd=f"{path}/Files/fd"
-            print(fd)
-            quit()
+            fd=f"{path}/ bin/fd"
+            arguments['--fd']=fd
+    if sys.platform=="win32":
+        try:
+            subprocess.run(['fd.exe'])
+            arguments['--fd']="fd.exe"
+        except:
+            path=os.getcwd()
+            fd=f"{path}/ bin/fd.exe"
+            arguments['--fd']=fd
+    
 
 def duperemove(txt):
     print("Removing Duplicate lines from ",txt)
@@ -264,7 +271,6 @@ def setup(arguments,interactive=None):
 
 def setupscan(arguments):
     setFD()
-    quit()
     print("Scanning for folders")
     if arguments['--delete']:
         open(file, 'w').close()
@@ -319,7 +325,6 @@ def searchdir(arguments,ignorefile):
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
 #interactive Mode
-    print(arguments)
     if arguments.get("--config")==None:
         arguments['--config']=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
     if (arguments['scan']!=True  and arguments['grab']!=True and arguments['missing']!=True) or arguments['interactive']:
