@@ -21,7 +21,7 @@ python3 -m venv /path/to/new/virtual/environment then you can use do something l
 /path/to/new/virtual/environment/pip install to install modules and
 /path/to/new/virtual/environment/python3 to run the program
 
-# Getting Started:Quick Guide
+# Quick Guide
 Please start here for a general overview of how to run this program. 
 ## Scanning Directory
 
