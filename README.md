@@ -18,13 +18,18 @@ py -m pip install --user virtualenv
 python3 -m venv venv
 
 ##### Add required modules
+On Linux
 ./venv/bin/pip3 install -r requirements.txt
 
+On Windows
+venv\Scripts\pip3.exe install -r requirements.txt
+
 ##### running python from venv
-./venv/bin/python
+On Linux
+/venv/bin/python3
 
 on Windows
-./venv/bin/python.exe
+venv\Scripts\python
 
 # Quick Guide
 Please start here for a general overview of how to run this program. 
