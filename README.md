@@ -36,6 +36,7 @@ scan a directory will write the paths to a txt document
     --delete ; -d This will delete the txt file otherwise the file is just appeneded
     --exclude ; -e Exclude certain types of videos from being added to txt file blu=encode,remux=remux,web=web-dl or web-rip orweb,tv=hdtv,other=badly named files
     --ignored ; -i this folder will be ignored completly, appends to .fdignore, so this should only need to be done once. 
+    --fd fd program location
 
 ### Grabbing Downloads
 `ahd_cross.py grab [arguments]` 
@@ -55,7 +56,8 @@ grab downloads using a list of the directories/files. Files can be generated man
     --date  restrict downloads only newer then this amount of days, should be an int
     --size ; -z  set whether a search should be done by name only or include file size restriction. If true then an additonal check will be added to see if all the matching
     --exclude ; -e For any directory this type of file will not be checked for possible cross seeds
-    --fd fd is a program for finding files if you can't install to system path you can put the location of the binary using this option. Note: a binary is included in this repo
+    --fd fd program location
+
 
 ### Find Files to Upload to AHD
 `ahd_cross.py missing [arguments]`
@@ -66,7 +68,8 @@ Will scan a directory and find any file that hasn't been uploaded to AHD. That a
     --api ; -a  your passkey key
 
     optional
-    [--exclude <source_excluded>... For any directory this type of file will not be checked for possible cross seeds
+    --exclude <source_excluded>... For any directory this type of file will not be checked for possible cross seeds
+    --fd fd program location
 
 ### interactive
 `ahd_cross.py [arguments]` or `ahd_cross.py interactive [arguments]` 
@@ -150,6 +153,10 @@ The result is that one will now have an easy to use list of potential files to u
 Ignore is used by fd to find what directories to disregard.
 Ignore folders will never be added as a directory during a scan. However sub-folders of a ignore folder be added if the ignore folder is chosen as root. 
 If we chose a file to be ignored, then since we can't cd into a file that file will always be ignored. 
+
+#### --fd
+If you want to use your own fd file use this argument is is for convience and to make running the program easier
+The reason you might want to do this is that this program will provide an version of fd.T his is for convience and to make running the program easier But it is not guaranted to be the newest/most optimized version. 
 
 
 #### Errors
