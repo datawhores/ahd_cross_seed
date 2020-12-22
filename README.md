@@ -7,11 +7,15 @@ cd ahdcross_seed
 ## Creating a virtual enviroment
 A Virtual environment is recommended. Please Make sure you are on python3 and NOT python 2
 
+##### install virtualenv
 On macOS and Linux:
 python3 -m pip install --user virtualenv
 
 On Windows:
 py -m pip install --user virtualenv
+
+##### create the virtualenv
+python3 -m venv venv
 
 ##### Add required modules
 ./venv/bin/pip3 install -r requirements.txt
