@@ -99,16 +99,33 @@ Start a gui version of the program
 # Arguments 
 A more in-depth overview of some of the argument that can be passed to the program
 
+### --fd
+If you want to use your own fd file use this argument is is for convience and to make running the program easier
+The reason you might want to do this is that this program will provide an version of fd.T his is for convience and to make running the program easier But it is not guaranted to be the newest/most optimized version. 
+
+### Errors
+Their are numerous reason for errors. Somes Python just can't get the size of a file if it is moutned. Other times AHD has network issues, and the api won't work. We try to skip over these errors and move onto the next file. If for some reason something happens. We have the errors file which is created when the program starts, and is updated until it ends.
+
+### Courtesy
+Running this everyday would be excessive especially on a large library. I would recommend using a scheduler. Linux has cron(not a big fan), jobber, cronicle. 
+Windows has the task scheduler. With any you used be able to set the program to run every week
+
 ### Config vs arguments
 Config is recommend to set a base. With that you only need to call -c [config file path]
 However, any commandline option you pick will overide the config option
 
 
-#### scan
+### scan
 `ahd_cross.py scan [arguments]` 
 You need to generate a list of files and Directories. The output is controled by either 
 * --txt in the commandline or
 * [txt] in the config file
+
+#### --ignore
+Ignore is used by fd to find what directories to disregard.
+Ignore folders will never be added as a directory during a scan. However sub-folders of a ignore folder be added if the ignore folder is chosen as root. 
+If we chose a file to be ignored, then since we can't cd into a file that file will always be ignored. 
+
 
 #### --root:
 This  folder(s) will be scan much the same as the ls or dir command. So every file or directory will be added to the scanning list. As they appear in the directory chosen. 
@@ -148,23 +165,7 @@ How it works is if for example we have a avengers remux, and the site has no ave
 Also if we have an encode that has not been upload. Even if an encode already exist your encode will be added to the list.
 The result is that one will now have an easy to use list of potential files to upload
 
-### Other
-#### --ignore
-Ignore is used by fd to find what directories to disregard.
-Ignore folders will never be added as a directory during a scan. However sub-folders of a ignore folder be added if the ignore folder is chosen as root. 
-If we chose a file to be ignored, then since we can't cd into a file that file will always be ignored. 
 
-#### --fd
-If you want to use your own fd file use this argument is is for convience and to make running the program easier
-The reason you might want to do this is that this program will provide an version of fd.T his is for convience and to make running the program easier But it is not guaranted to be the newest/most optimized version. 
-
-
-#### Errors
-Their are numerous reason for errors. Somes Python just can't get the size of a file if it is moutned. Other times AHD has network issues, and the api won't work. We try to skip over these errors and move onto the next file. If for some reason something happens. We have the errors file which is created when the program starts, and is updated until it ends.
-
-#### Courtesy
-Running this everyday would be excessive especially on a large library. I would recommend using a scheduler. Linux has cron(not a big fan), jobber, cronicle. 
-Windows has the task scheduler. With any you used be able to set the program to run every week
 
 
 
