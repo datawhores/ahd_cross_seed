@@ -1,6 +1,6 @@
 # Install
 ### Clone the repository
-git clone https://gitlab.com/excludedBittern8/ahd_cross_seed
+git clone https://github.com/excludedBittern8/ahdcross_seed
 
 cd ahd_cross_seed
 
