@@ -9,19 +9,29 @@ A Virtual environment is recommended. Please Make sure you are on python3 and NO
 
 ##### install virtualenv
 On macOS and Linux:
+
 python3 -m pip install --user virtualenv
 
 On Windows:
+
 py -m pip install --user virtualenv
 
 ##### create the virtualenv
+On Linux:
+
 python3 -m venv venv
 
+On Windows:
+python3 -m venv venv
+or
+py -m venv venv
 ##### Add required modules
-On Linux
+On Linux:
+
 ./venv/bin/pip3 install -r requirements.txt
 
-On Windows
+On Windows:
+
 venv\Scripts\pip3.exe install -r requirements.txt
 
 ##### running python from venv
