@@ -7,7 +7,6 @@ docopt==0.6.2
 guessit==3.1.1
 idna==2.10
 pathlib==1.0.1
-pkg-resources==0.0.0
 prompt-toolkit==3.0.8
 python-dateutil==2.8.1
 pytz==2020.4
@@ -17,3 +16,5 @@ six==1.15.0
 urllib3==1.26.2
 wcwidth==0.2.5
 zope.interface==5.2.0
+IMDbPY==2020.9.25
+xmltodict==0.12.0
