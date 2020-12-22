@@ -71,6 +71,64 @@ Will scan a directory and find any file that hasn't been uploaded to AHD. That a
 
 
 
+# In Depth Guide
+# Interactive Wizard
+Note an interactive Mode can now be Started
+This is done by running the program with no arguments
+
+
+# Getting Started
+## Config vs [Commandline options i.e what appeares when you do -h]
+Config is recommend to set a base. With that you only need to call -c [config file path]
+However, any commandline option you pick will overide the config option
+## Scanning
+You need to generate a list of files and Directories. The output is controled by either 
+* --txt in the commandline or
+* [txt] in the config file
+### root:
+root These type of folders will be scan much the same as the ls or dir command. So every file or directory will be added to the scanning list. As they appear in the directory chosen. 
+
+Note: If you have a sonnar or raddar file please check these repos out [placeholder]
+
+## Grabbing
+### Type of checks
+Their are two ways for a file/Folder to match one way is for all the information like group resolution source type, etc to match. 
+A second way is for just the group and filesize to match. The reason it is not just the filesize, is because sometimes remuxes are basically the same sizes between groups.
+A match leads to a download or output line to a file
+### Grabbing:Folder vs File
+#### Folder
+When the grabber sees a folder in the txt list. It will start a folder scan.
+This should normally only apply to TV folders
+A folder scan will scan every type of file i.e web-dl web-rip individually. The size calculated will be based on that type of file. This goes down to the resolution so 
+* WEB-Dl 1080p
+* WEB-DL 2160p 
+will both be consider to be two different release. However if you had 
+* Framestor 1080p Remux
+* Epislon 1080p Remux in the same folder. 
+That could lead to issues as now the sescond type of matching would not work. As the size match would be off
+#### File
+File scans are much the same as folder scan. If the information matches then the torrent is downloaded or output to file. However the check is based on the path on the txt file
+
+
+## Missing
+How it works is if for example we have a avengers remux, and the site has no avengers remux uploaded, then that will be written to the misstxt file.
+Also if we have an encode that has not been upload. Even if an encode already exist your encode will be added to the list.
+The result is that one will now have an easy to use list of potential files to upload
+
+
+## Other
+
+
+### Note on Ignore
+Ignore is used by fd to find what directories to disregard.
+Ignore folders will never be added as a directory during a scan. However sub-folders of a ignore folder be added if the ignore folder is chosen as root. 
+If we chose a file to be ignored, then since we can't cd into a file that file will always be ignored. 
+### Errors
+Their are numerous reason for errors. Somes Python just can't get the size of a file if it is moutned. Other times AHD has network issues, and the api won't work. We try to skip over these errors and move onto the next file. If for some reason something happens. We have the errors file which is created when the program starts, and is updated until it ends.
+### Courtesy
+Running this everyday would be excessive especially on a large library. I would recommend using a scheduler. Linux has cron(not a big fan), jobber, cronicle. 
+Windows has the task scheduler. With any you used be able to set the program to run every week
+
 
 
    
