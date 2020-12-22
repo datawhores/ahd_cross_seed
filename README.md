@@ -69,7 +69,7 @@ Will scan a directory and find any file that hasn't been uploaded to AHD. That a
     [--exclude <source_excluded>... For any directory this type of file will not be checked for possible cross seeds
 
 
-```
+
 
 
 
