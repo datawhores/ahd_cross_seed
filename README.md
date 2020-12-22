@@ -22,7 +22,7 @@ py -m pip install --user virtualenv
 on Windows
 ./venv/bin/python.exe
 
-# Quick Guide``
+# Quick Guide
 Please start here for a general overview of how to run this program. 
 ### Scanning Directory
 
@@ -99,27 +99,27 @@ Start a gui version of the program
 # Arguments 
 A more in-depth overview of some of the argument that can be passed to the program
 
-### --fd
+## --fd
 If you want to use your own fd file use this argument is is for convience and to make running the program easier
 The reason you might want to do this is that this program will provide an version of fd.T his is for convience and to make running the program easier But it is not guaranted to be the newest/most optimized version. 
 
-### Errors
+## Errors
 Their are numerous reason for errors. Somes Python just can't get the size of a file if it is moutned. Other times AHD has network issues, and the api won't work. We try to skip over these errors and move onto the next file. If for some reason something happens. We have the errors file which is created when the program starts, and is updated until it ends.
 
-### Courtesy
+## Courtesy
 Running this everyday would be excessive especially on a large library. I would recommend using a scheduler. Linux has cron(not a big fan), jobber, cronicle. 
 Windows has the task scheduler. With any you used be able to set the program to run every week
 
-### Config vs arguments
+## Config vs arguments
 Config is recommend to set a base. With that you only need to call -c [config file path]
 However, any commandline option you pick will overide the config option
 
 
-### scan
+## scan
 `ahd_cross.py scan [arguments]` 
 You need to generate a list of files and Directories. The output is controled by either 
 * --txt in the commandline or
-* [txt] in the config file
+* txt: in the config file
 
 #### --ignore
 Ignore is used by fd to find what directories to disregard.
@@ -132,7 +132,7 @@ This  folder(s) will be scan much the same as the ls or dir command. So every fi
 
 Note: If you have a sonnar or raddar file please check these repos out [placeholder]
 
-### grab
+## grab
 `ahd_cross.py grab [arguments]` 
 
 You will need to provide a txt file of directories/folders. Either generated manually or with the scan command
@@ -159,7 +159,11 @@ That could lead to issues as now the sescond type of matching would not work. As
 File scans are much the same as folder scan. If the information matches then the torrent is downloaded or output to file. However the check is based on the path on the txt file
 
 
-### missing
+## missing
+`ahd_cross.py missing [arguments]` 
+You need to generate a txt file for output. Controled b
+* --missingtxt in the commandline or
+* missingtxt: in the config file
 
 How it works is if for example we have a avengers remux, and the site has no avengers remux uploaded, then that will be written to the misstxt file.
 Also if we have an encode that has not been upload. Even if an encode already exist your encode will be added to the list.
