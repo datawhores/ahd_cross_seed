@@ -2,7 +2,7 @@
 ## Clone the repository
 git clone https://github.com/excludedBittern8/ahdcross_seed
 
-cd ahd_cross_seed
+cd ahdcross_seed
 
 ## Creating a virtual enviroment
 A Virtual environment is recommended. Please Make sure you are on python3 and NOT python 2
