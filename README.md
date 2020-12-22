@@ -24,7 +24,7 @@ on Windows
 
 # Quick Guide
 Please start here for a general overview of how to run this program. 
-### Scanning Directory
+## Scanning Directory
 
 `ahd_cross.py scan [arguments]` 
 
@@ -38,7 +38,7 @@ scan a directory will write the paths to a txt document
     --ignored ; -i this folder will be ignored completly, appends to .fdignore, so this should only need to be done once. 
     --fd fd program location
 
-### Grabbing Downloads
+## Grabbing Downloads
 `ahd_cross.py grab [arguments]` 
 
 grab downloads using a list of the directories/files. Files can be generated manually or with this programs scanning function. If Scanning please note that 
@@ -59,7 +59,7 @@ grab downloads using a list of the directories/files. Files can be generated man
     --fd fd program location
 
 
-### Find Files to Upload to AHD
+## Find Files to Upload to AHD
 `ahd_cross.py missing [arguments]`
 
 Will scan a directory and find any file that hasn't been uploaded to AHD. That also has a free slot on AHD. Any encode that hasn't been uploaded will be added 
@@ -71,7 +71,7 @@ Will scan a directory and find any file that hasn't been uploaded to AHD. That a
     --exclude <source_excluded>... For any directory this type of file will not be checked for possible cross seeds
     --fd fd program location
 
-### interactive
+## Interactive Mode
 `ahd_cross.py [arguments]` or `ahd_cross.py interactive [arguments]` 
 Start a gui version of the program
 
