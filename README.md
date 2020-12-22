@@ -1,6 +1,7 @@
 # Install
 ### Clone the repository
 git clone https://gitlab.com/excludedBittern8/ahd_cross_seed
+
 cd ahd_cross_seed
 
 ### Creating a virtual enviroment
