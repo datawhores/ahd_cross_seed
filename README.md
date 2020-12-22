@@ -4,17 +4,22 @@ git clone https://gitlab.com/excludedBittern8/ahd_cross_seed
 cd ahd_cross_seed
 
 ### Creating a virtual enviroment
-A Virtual environment is recommended
+A Virtual environment is recommended. Please Make sure you are on python3 and NOT python 2
+
 On macOS and Linux:
-
 python3 -m pip install --user virtualenv
-On Windows:
 
+On Windows:
 py -m pip install --user virtualenv
 
-### Add required modules
+##### Add required modules
 ./venv/bin/pip3 install -r requirements.txt
 
+##### running python from venv
+./venv/bin/python
+
+on Windows
+./venv/bin/python.exe
 
 # Quick Guide``
 Please start here for a general overview of how to run this program. 
