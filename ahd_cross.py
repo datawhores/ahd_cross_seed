@@ -1,517 +1,434 @@
-from datetime import date,timedelta, datetime
-from classes import *
+#! /usr/bin/env python3
+"""NOTE: READ DOCUMENTATION BEFORE USAGE.
+Usage:
+    ahd_cross.py [(-h | --help) --txt=<txtlocation> --fd <fd> --wget <wget> --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore>]
+    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int>  --misstxt <output>]
+    [--root <normal_root>... --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
+    ahd_cross.py interactive [--txt=<txtlocation> --fd <fd> --wget <wget>  --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore>]
+    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --misstxt <output>]
+    [--root <normal_root>...  --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
+    ahd_cross.py scan [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore> --config <config> --delete]
+    [--root <normal_root>... --ignore <sub_folders_to_ignore>...]
+    ahd_cross.py grab [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore>  --lines-skip <num_lines_skipped> --torrent <torrents_download> --cookie <cookie> --output <output> ]
+    [--api <apikey> --config <config> --date <int> ]
+    [--exclude <source_excluded>]...
+    ahd_cross.py missing [--txt=<txtlocation> --fd <fd> --wget <wget>  --misstxt <output>  --api <apikey> --config <config>]
+    [--exclude <source_excluded>...]
+
+Options:
+ -h --help     Show this screen.
+ --txt <txtlocation>  txt file with all the file names(required for all commands)
+--fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path
+--config ; -x <config> commandline overwrites config
+--fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory.
+other OS may need to input this manually
+--wget <wget> used to download files
+
+=============================================================================================================================================
+
+ ahd_cross.py scan
+ scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'. Need at least 1 root.
+<required>
+--root <normal_root(s)> Scan this directory. Much like the ls(linux) or dir(windows) command
+<optional>
+--delete; -d  Will delete the old txt file(optional)
+--ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional)
+
+=============================================================================================================================================
+
+ ahd_cross.py grab
+ grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
+<choose 1>
+  --torrent ; -t <torrents_download>  Here are where the torrent files will download
+  --output ; -o <output>  Here are where the torrentlinks will be written
+<required>
+  --api ; -a <apikey> This is your ahd passkey
+  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.
+<optional>
+  --date ; -d <int> only download torrents newer then this input should be int, and represents days. By default it is set to around 25 years  [default: 10000 ]
+  --lines-skip <num_lines_skipped> Number of lines in txt file to skip during grab  [default: 0]
+  --exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.
+
+=============================================================================================================================================
+
+ [missing]
+Checks to see if you have any potential uploads by comparing your files to what has already been uploaded
+
+ahd_cross.py missing
+<required>
+--misstxt <txt_where_potential_uploads_are written> here we output to a txt file files that don't have any uploads. This means that we can potentially upload these, for rank. Or to increase the amount of cross seeds we have
+
+
+
+
+
+
+
+
+  """
 import requests
-import xmltodict
 import subprocess
-from prompt_toolkit.shortcuts import message_dialog
-from prompt_toolkit.shortcuts import input_dialog
-from prompt_toolkit.shortcuts import radiolist_dialog
-from prompt_toolkit.shortcuts import button_dialog
-from prompt_toolkit.shortcuts import checkboxlist_dialog
+import pathlib
+from subprocess import PIPE
+from pathlib import Path
 import os
+from guessit import guessit
+from datetime import date,timedelta, datetime
+from docopt import docopt
+import tempfile
+import time
+import configparser
 import re
+config = configparser.ConfigParser(allow_no_value=True)
+#import other files
+from folders import *
+from classes import *
+from files import *
+from prompt_toolkit.shortcuts import button_dialog
+import sys
+
+
 """
-General Functions
+Setup Function
 """
-def get_matches(errorfile,arguments,files):
-    wget=arguments['--wget']
-    torrentfolder=arguments['--torrent']
-    api=arguments['--api']
-    cookie=arguments['--cookie']
-    datefilter=(date.today()- timedelta(int(arguments['--date'])))
-    file=files.get_first()
-    if file=="No Files":
+def duperemove(txt):
+    print("Removing Duplicate lines from ",txt)
+    if txt==None:
         return
-    filesize=files.get_size()
-    fileguessit=guessitinfo(file)
-    fileguessit.set_values()
-    title=fileguessit.get_name().lower()
-    if fileguessit.get_season()!="":
-        title=title+": " + fileguessit.get_season()
-    imdb=get_imdb(fileguessit.get_info())
-    if imdb==None:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find IMDB " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print(file," could not find IMDB")
-        return
-    search = "https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
-    print("Searching For",files.type,"with:",search)
+    input=open(txt,"r")
+    lines_seen = set() # holds lines already seen
+    for line in input:
+        if line not in lines_seen: # not a duplicate
+            lines_seen.add(line)
+    input.close()
+    outfile = open(txt, "w")
+    for line in lines_seen:
+        outfile.write(line)
+    outfile.close()
+def updateargs(arguments):
+    configpath=arguments.get('--config')
+    if os.path.isfile(configpath)==False:
+        print("Could Not Read Config Path")
+        return arguments
     try:
-        response = requests.get(search, timeout=120)
+        configpath=arguments.get('--config')
+        config.read(configpath)
     except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find Get a response from AHD URL: "+search +" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("Issue getting response:",search)
-        return
-    try:
-        results=xmltodict.parse(response.content)
-    except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find parse AHD response URL: "+search+" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("unable to parse xml")
-        return
-    try:
-        results['searchresults']['torrent'][1]['name']
-        loop=True
-        max=len(results['searchresults']['torrent'])
-    except KeyError as key:
-        print(key)
-        if str(key)=="1":
-            element=results['searchresults']['torrent']
-            max=1
-            loop=False
-        else:
-            print("Probably no results")
-            return
-    for i in range(max):
-        titlematch=False
-        filedate=False
-        group=False
-        resolution=False
-        source=False
-        sizematch=False
-        if loop: element = results['searchresults']['torrent'][i]
-        querytitle=lower(element['name'])
-        if querytitle==None:
+        print("Could Not Read Config Path")
+        return arguments
+    if arguments['--txt']==None:
+        arguments['--txt']=config['general']['txt']
+    if arguments['--cookie']==None:
+        arguments['--cookie']=config['grab']['cookie']
+    if arguments['--api']==None:
+        arguments['--api']=config['grab']['api']
+    if arguments['--torrent']==None:
+        arguments['--torrent']=config['grab']['torrent']
+    if arguments['--output']==None:
+        arguments['--output']=config['grab']['output']
+    if arguments['--misstxt']==None:
+        arguments['--misstxt']=config['general']['misstxt']
+    if arguments['--exclude']==[] or  arguments['--exclude']==None:
+        arguments['--exclude']=config['grab']['exclude']
+    if arguments['--root']==[] or  arguments['--root']==None:
+        arguments['--root']=config['scan']['root']
+    if arguments['--ignore']==[] or arguments['--ignore']==None:
+        arguments['--ignore']=config['scan']['ignore']
+    return arguments
+def releasetype(arguments):
+    source={'remux':'yes','web':'yes','blu':'yes','tv':'yes','other':'yes'}
+    if arguments['--exclude']==None or arguments['--exclude']==[] or arguments['--exclude']=="" or len(arguments['--exclude'])==0:
+        return source
+    if type(arguments['--exclude'])==str:
+        arguments['--exclude']=arguments['--exclude'].split(",")
+    for element in arguments['--exclude']:
+        if element=="":
             continue
-        querygroup=lower(element['releasegroup'])
-        if querygroup==None:
-            querygroup=""
-        queryresolution=element['resolution']
-        querysource=lower(element['media'])
-        if querysource=="uhd blu-ray":
-            querysource="blu-ray"
-        if querysource=="web-dl" or querysource=="webrip":
-            querysource="web"
-        queryencoding=element['encoding']
-        querysize= int(element['size'])
-        querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
-        if querytitle==title:
-            titlematch=True
-        if querysource==fileguessit.get_source():
-            source=True
-        if querygroup==fileguessit.get_group() or re.search(querygroup,fileguessit.get_group(),re.IGNORECASE)!=None \
-        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None:
-            group=True
-        if queryresolution==fileguessit.get_resolution():
-            resolution=True
-        if datefilter < querydate:
-            filedate=True
-        if difference(querysize,filesize)<.01:
-            sizematch=True
-        if ((titlematch is True and source is True and group is True and resolution is True \
-        and filedate is True and sizematch is True )and filesize!=0):
+        try:
+            source[element]="no"
+        except KeyError:
             pass
+    return source
+def download(arguments,txt):
+    index=0
+    list=open(txt,"r")
+    source=releasetype(arguments)
+    errorfile=errorpath=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
+    if os.path.isdir(errorfile)==False:
+            os.mkdir(errorfile)
+    errorfile=errorfile+"ahdcross_errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
+    for line in list:
+        index=index+1
+        print('\n',line)
+        if index<=int(arguments["--lines-skip"]):
+            print("Skipping Line")
+            continue
+        if line=='\n' or line=="" or len(line)==0:
+            continue
+        line=line.rstrip("\n")
+
+
+        if os.path.isdir(line)==True:
+            download_folder(arguments,txt,line,source,errorfile)
+        elif os.path.isfile(line)==True:
+            download_file(arguments,txt,line,source,errorfile)
+
         else:
+            print("File or Dir Not found")
+            errorpath=open(errorfile,"a+")
+            errorstring=line +": File or Dir Not found "  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
+            errorpath.write(errorstring)
+            errorpath.close()
+            continue
+        print("Waiting 5 Seconds")
+        time.sleep(5)
+def missing(arguments):
+    if arguments['--misstxt']=='' or len(arguments['--misstxt'])==0 or arguments['--misstxt']==None:
+        print("misstxt must be configured for missing scan ")
+        quit()
+    source=releasetype(arguments)
+    list=open(arguments['--txt'],"r")
+    index=0
+    errorfile=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
+    if os.path.isdir(errorfile)==False:
+            os.mkdir(errorfile)
+    errorfile=errorfile+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
+    for line in list:
+        index=index+1
+        print('\n',line)
+        if index<=int(arguments["--lines-skip"]):
+            print("Skipping Line")
+            continue
+        elif line=='\n' or line=="" or len(line)==0:
+            continue
+        if  re.search("#",line)!=None:
+            print("Skipping Line")
+            continue
+        line=line.rstrip("\n")
+
+        if os.path.isdir(line)==True:
+            scan_folder(arguments,line,source,errorfile)
+        elif os.path.isfile(line)==True:
+            scan_file(arguments,line,source,errorfile)
+        else:
+            print("File or Dir Not found")
+            errorpath=open(errorfile,"a+")
+            errorstring=line +": File or Dir Not found "  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
+            errorpath.write(errorstring)
+            errorpath.close()
             continue
 
-        if arguments['--output']!=None  and arguments['--output']!="" and arguments['--output']!="None":
-            link="https://awesome-hd.me/torrents.php?id=" + element['groupid']+"&torrentid="+ element['id']
-            t=open(arguments['--output'],'a')
-            print("writing to file:",arguments['--output'])
-            t.write(link+'\n')
-        if arguments['--torrent']!=None and arguments['--torrent']!="" and  arguments['--torrent']!="None":
-            link="https://awesome-hd.me/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
-            title=re.sub(": ","-",querytitle)
-            name=(title+ "." + element['year']+ "." + querysource+ "." + queryresolution+  "."+ querygroup+  "." + queryencoding). replace(" ",".")
-            name=name.replace("|","1")
-            name=("[ahd]"+ name +".torrent").replace("/", ".")
-            torrent=os.path.join(torrentfolder,name)
-            print(torrent,'\n',link)
-            print(wget)
-            subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
-
-            try:
-                subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
-            except:
-                print("Download error")
-def get_missing(errorfile,arguments,files,encode=None):
-    if encode==None:
-        encode=False
-    api=arguments['--api']
-    output=arguments['--misstxt']
-    file=files.get_first()
-    if file=="No Files":
-        return
-    filesize=files.get_size()
-    fileguessit=guessitinfo(file)
-    fileguessit.set_values()
-    title=fileguessit.get_name().lower()
-    if fileguessit.get_season()!="":
-        title=title+": " + fileguessit.get_season()
-    imdb=get_imdb(fileguessit.get_info())
-    if imdb==None:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find IMDB " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print(file," could not find IMDB")
-        return
-    search = "https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
-    print("Searching For",files.type,"with:",search)
-
+        print("Waiting 5 Seconds")
+        time.sleep(5)
+def setup_txt(arguments,interactive=None):
+    if interactive==None:
+        interactive=False
+    file=arguments['--txt']
     try:
-        response = requests.get(search, timeout=120)
+        open(file,"a+").close()
     except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find Get a response from AHD URL: "+search +" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("Issue getting response:",search)
-        return
-    try:
-        results=xmltodict.parse(response.content)
-    except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find parse AHD response URL: "+search+" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("unable to parse xml")
-    try:
-        results['searchresults']['torrent'][1]['name']
-        loop=True
-        max=len(results['searchresults']['torrent'])
-    except KeyError as key:
-        if str(key)=="1":
-            element=results['searchresults']['torrent']
-            max=1
-            loop=False
+        if interactive==False:
+            print("No txt file")
+            quit()
         else:
-            print("Probably no results")
-            print("Adding Potential Upload to File")
-            output=open(output,"a+")
-            output.write(files.get_dir())
-            output.write(":")
-            output.write(file)
-            output.write('\n')
-            output.close()
-            return
-    for i in range(max):
-        titlematch=False
-        group=False
-        resolution=False
-        source=False
-        sizematch=False
-        if loop: element = results['searchresults']['torrent'][i]
-        querytitle=lower(element['name'])
-        if querytitle==None:
-            continue
-        querygroup=lower(element['releasegroup'])
-        if querygroup=="None":
-            querygroup=""
-        queryresolution=element['resolution']
-        querysource=lower(element['media'])
-        if querysource=="uhd blu-ray":
-            querysource="blu-ray"
-        queryencoding=element['encoding']
-        querysize= int(element['size'])
-        querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
-        if querytitle==title:
-            titlematch=True
-        if querysource==fileguessit.get_source():
-            source=True
-        if querygroup==fileguessit.get_group() or re.search(querygroup,fileguessit.get_group(),re.IGNORECASE)!=None \
-        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None:
-            group=True
-        if queryresolution==fileguessit.get_resolution():
-            resolution=True
-        if difference(querysize,filesize)<.01:
-            sizematch=True
-        if encode is False and source is True and resolution is True:
-            return  
-        if ((titlematch is True and source is True and group is True and resolution is True \
-        and sizematch is True) and filesize!=0):
-            return
-    print("Adding Potential Upload to File")
-    output=open(output,"a+")
-    if files.get_dir()!=0:
-        output.write(files.get_dir())
-        output.write(":")
-    output.write(file)
-    output.write('\n')
-    output.close()
-
-
-
-def get_imdb(details):
-   title = details.get('title')
-   ia = IMDb()
-   if title==None:
-       return title
-   for i in range(0,16):
-       if i==15:
-           return None
-       try:
-         results = ia.search_movie(title)
-         break
-       except Exception as e:
-           time.sleep(10)
-   if len(results) == 0:
-        return None
-   if 'year' in details:
-    for movie in results:
-        if ((details.get('year')==movie.get('year')) and (movie.get('year')!=None or details.get('year')!=None )):
-            return movie.movieID
-    return None
-   else:
-      return results[0].movieID
-def difference(value1,value2):
-    dif=abs((value2-value1)/((value1+value2)/2))
-    return dif
-def lower(input):
-    if input==None:
-        return input
-    else:
-        input=input.lower()
-        return input
-def createconfig(config):
-    configpath=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
-    config.read(configpath)
-
-
-    if config.has_section('general') ==False:
-        config.add_section('general')
-    if config.has_section('grab') ==False:
-        config.add_section('grab')
-    if config.has_section('scan') ==False:
-        config.add_section('scan')
-    message_dialog(
-        title="Config Creator",
-        text="Welcome to the Config Creator.\nA config File is recommended to run this program\nWe will Start by adding root or Folders to Scan\nNote You'll need at least one root\nNote:This will overright ahd_Cross.txt if you confirm at the end",
-    ).run()
-
-    newroot =True
-    root=None
-    rootstr=""
-    ignorestr=""
-    while newroot:
-        if root==None:
-            root = input_dialog(title='Getting Root Directories ',text='Please Enter the Path to a Root Directory:').run()
-        if root==None:
-            continue
-        addstring="Adding:"+root + " is this Okay? "
-        option = button_dialog(
-             title=addstring,
-             buttons=[("Yes", True), ("No", False)],
-        ).run()
-        if option==False:
-            root=None
-            pass
-        else:
-            rootstr=rootstr+root+","
-            root=None
-        newroot= button_dialog(
-                 title="Add Another Root Folder ",
-                 buttons=[("Yes", True), ("No", False)],
-        ).run()
-    config.set('scan', "root", rootstr)
-
-    confirm = button_dialog(
-                 title="Add a Folder or File to ignore ",
-                 buttons=[("Yes", True), ("No", False),("Info", None)],
-    ).run()
-    while confirm!=False:
-        if confirm==None:
             message_dialog(
-                    title="Ignore Folders and Files",
-                    text="Ignored Directories will not be scanned As a subdirectory of another Root Folder.\nHowever note that a ignored Folder can still be added as a root .\nIn that case the subdirectories of the ignore folder would be added\nIgnored Files will not be added at all",
+                title="Interactive Mode",
+                text="Unable to read text file\nPlease Change Config Location\nOr Start Config Wizard",
             ).run()
-        if confirm:
-            ignorepath = input_dialog(title='Getting ignore Path ',text='Please Enter the Path to ignore:').run()
-        
-        addstring="Adding:"+ignorepath + " is this Okay? "
-        option = button_dialog(
-             title=addstring,
-             buttons=[("Yes", True), ("No", False)],
-        ).run()
-        if addstring==True:
-             ignorestr= ignorestr+ignorepath
-        confirm = button_dialog(
-                     title="Add Another Folder to ignore ",
-                     buttons=[("Yes", True), ("No", False)],
-        ).run()
+            return False
 
-    config.set('scan', "ignore", ignorestr)
-
-
-    #setup next few options as empty
-    config.set('general', "txt", "")
-    config.set('grab', "api", "")
-    config.set('grab', "cookie", "")
-    config.set('grab', "output", "")
-    config.set('general', "misstxt", "")
-    config.set('grab', "torrent", "")
+def setup_binaries(arguments):
+    fdignore=arguments['--fdignore']
+    workingdir=os.path.dirname(os.path.abspath(__file__))
+    if fdignore==None:
+        try:
+            arguments['--fdignore']=os.path.join(workingdir,".fdignore")
+        except:
+            print("Error setting fdignore")
+            exit()
+    t=open(arguments['--fdignore'], 'w')
+    t.close()
+    #shell=shellbool is true is needed for windows. But cases issues on Linux
+    if sys.platform=="linux":
+        shellbool=False
+    else:
+        shellbool=True
 
 
-    confirm=False
-    while confirm==False:
-        txtpath = input_dialog(title='Scanner TXT File',text='Please Enter the Path for scanner and grabber.\nFile Paths will Writen Here and is required ').run()
-        if txtpath==None:
-            break
-        config.set('general', "txt", txtpath)
-        confirmtxt="You entered:"+txtpath+" is this Okay?"
-        confirm = button_dialog(
-                 title=confirmtxt,
-                 buttons=[("Yes", True), ("No", False)],
-            ).run()
-    confirm=False
-    while confirm==False:
-        torrent = input_dialog(title='Torrent Folder',text='Please Enter the Path for downloading Torrents\nIf you leave this blank make sure to set Output\nThat step will come up later in this setup\nIt is okay to setup Both Torrent and Output\nHowever if None are selected then Nothing will happen when Downloader finds a match').run()
-        if torrent==None:
-            break
-        config.set('grab', "torrent", torrent)
-        confirmtxt="You entered:"+torrent+" is this Okay?"
-        confirm = button_dialog(
-             title=confirmtxt,
-             buttons=[("Yes", True), ("No", False)],
-        ).run()
-
-
-
-    confirm=False
-    while confirm==False:
-        key = input_dialog(title='AHD KEY',text='Please Enter your AHD passkey.\n   This will be used to Download Torrent Files and Scan AHD\nThis is Required').run()
-        if key==None:
-            break
-        config.set('grab', "api", key)
-        confirmtxt="You entered:"+key+" is this Okay?"
-        confirm = button_dialog(
-                 title=confirmtxt,
-                 buttons=[("Yes", True), ("No", False)],
-            ).run()
-    confirm=False
-    while confirm==False:
-        cookie = input_dialog(title='Cookie',text='You Will need a Cookie File For Downloading\n[cookies.txt by Lennon Hill and Get cookies.txt are good options for exporting\nfrom browser]\nFile should be in .txt and not a json. Paste the path Here\nPress Cancel to Leave Blank\nThis is Required if you want to Download').run()
-        if cookie==None:
-            break
-        config.set('grab', "cookie", cookie)
-        confirmtxt="You entered:"+cookie+" is this Okay?"
-        confirm = button_dialog(
-            title=confirmtxt,
-            buttons=[("Yes", True), ("No", False)],
-        ).run()
-
-    confirm= button_dialog(
-        title="Do you want to Exclude Certain Sources\nFor example all blu-ray encodes,etc\nThese will be ignored during grabbing/matching\nNote: Other are Files that don't fit in other selectors\nPress Cancel to Leave Blank",
-        buttons=[("Yes", True), ("No", False)],
-    ).run()
-    excludestr=""
-    if confirm:
-        exclude= checkboxlist_dialog(
-        values=[
-            ("remux", "Remux"),
-            ("blu", "Blu-Ray Encode"),
-            ("tv", "HDTV"),
-            ("web", "WEB"),
-            ("other", "Other"),
-        ],
-        title="Exclude",
-        text="Pick the Source Types you would like to ignore ",
-        ).run()
-
-        for type in exclude:
-            excludestr=excludestr+type+","
-    config.set('grab', "exclude", excludestr)
-
-    confirm=False
-    while confirm==False:
-        outpath = input_dialog(title='Download Links Output TXT',text='Please Enter a path for Writing Matched Links to.\nWith This Every Time a Match is found a download url will be written here\nPress Cancel to Leave Blank').run()
-        if txtpath==None:
-            break
-        config.set('grab', "output", outpath)
-        confirmtxt="You entered:"+outpath+" is this Okay?"
-        confirm = button_dialog(
-                 title=confirmtxt,
-                 buttons=[("Yes", True), ("No", False)],
-            ).run()
-
-    confirm=False
-    while confirm==False:
-        missingpath = input_dialog(title='Missing Files Output TXT',text='Please Enter a path for Writing Potential Missing Files.\nDuring a "Missing Scan"  Every File is Compared to AHD Libary if the Slot is not already filled or your file is a encode.\nThe Path will be written to this TXT File\nThis is Required if you want to Find Files to upload').run()
-        if txtpath==None:
-            break
-        config.set('general', "misstxt", missingpath)
-        confirmtxt="You entered:"+outpath+" is this Okay?"
-        confirm = button_dialog(
-                 title=confirmtxt,
-                 buttons=[("Yes", True), ("No", False)],
-            ).run()
-
-
-
-
-    size = button_dialog(
-         title="Check for File Sizes",
-         text="Adds another way to match files if True",
-         buttons=[("Yes", "True"), ("No", "False")],
-    ).run()
-    config.set('grab', "size", size)
-
-    fd=""
-    config.set('general', "fd", fd)
-    confirm=False
-    while confirm==False:
-        fd = input_dialog(title='FD' ,text='FD is required for Program\nDownloads Can be found here https://github.com/sharkdp/fd/releases\nBy Default the program comes with a version of fd for your OS\nIf you want to use your own binary, you can enter your choice here \nPress Cancel to use the Default  ').run()
-        if txtpath==None:
-            break
-        config.set('general', "fd", fd)
-        confirmtxt="You entered:"+outpath+" is this Okay?"
-        confirm = button_dialog(
-                 title=confirmtxt,
-                 buttons=[("Yes", True), ("No", False)],
-            ).run()
-    wget=""
-    config.set('general', "wget", wget)
-    confirm=False
-    while confirm==False:
-        fd = input_dialog(title='WGET' ,text='WGET is required for Program\nLinux comes with this Preinstalled usually for windows:https://eternallybored.org/misc/wget/\nBy Default the program comes with a version of wget for Windows\nIf you want to use your own binary, you can enter your choice here \nPress Cancel to use the Default  ').run()
-        if txtpath==None:
-            break
-        config.set('general', "fd", fd)
-        confirmtxt="You entered:"+outpath+" is this Okay?"
-        confirm = button_dialog(
-                 title=confirmtxt,
-                 buttons=[("Yes", True), ("No", False)],
-            ).run()
-    
-    
-    
-    
-    
-    
-    
-    
-    sections = config.sections()
-    config_string=""
-    for section in sections:
-        options = config.options(section)
-        for option in options:
-              temp_dict={}
-              temp_dict[option] = config.get(section,option)
-              config_string=config_string+str(temp_dict)+"\n"
+    if arguments['--fd']==None and sys.platform=="linux":
+        t=subprocess.run(['fd'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+        arguments['--fd']="fd"
+        if t.returncode!=0:
+            fd=os.path.join(workingdir,"bin","fd")
+            arguments['--fd']=fd
+    if arguments['--wget']==None and sys.platform=="linux":
+        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+        arguments['--wget']="wget"
+        if t2.returncode!=0:
+            path=os.getcwd()
+            wget=os.path.join(workingdir,"bin","wget")
+            arguments['--wget']=wget
+    if arguments['--fd']==None and sys.platform=="win32":
+        t=subprocess.run(['fd.exe'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=shellbool)
+        arguments['--fd']="fd.exe"
+        if t.returncode!=0:
+            path=os.getcwd()
+            fd=os.path.join(workingdir,"bin","fd.exe")
+            arguments['--fd']=fd
+    if arguments['--wget']==None and sys.platform=="win32":
+        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=shellbool)
+        arguments['--wget']="wget.exe"
+        if t2.returncode!=0:
+            path=os.getcwd()
+            wget=os.path.join(workingdir,"bin","wget.exe")
+            arguments['--wget']=wget
 
 
 
 
 
 
-    txt="These are the Options that will be written to the configfile\nPlease Confirm if you want to save these Options\n Current File wil be overwritten\n\n"+config_string
 
 
 
-    option = button_dialog(
-             title="Confirm Options",
-             text=txt,
-             buttons=[("Yes", True), ("No", False)],
-    ).run()
-    if option==False:
+
+
+
+"""
+Scanning Functions
+"""
+def set_ignored(arguments):
+    ignore=arguments.get("--fdignore")
+    if ignore==None or ignore==[] or ignore=="" or len(ignore)==0:
+       return
+    if type(arguments['--ignore'])==str:
+        arguments['--ignore']=arguments['--ignore'].split(",")
+    ignorelist=arguments['--ignore']
+    if len(ignorelist)==0:
         return
-    with open(configpath, 'w') as configfile:
-      print("Writing to configfile")
-      config.write(configfile)
+    open(ignore,"w+").close()
+    ignore=open(ignore,"a+")
+    for element in ignorelist:
+        if element=="":
+            continue
+        ignore.write(element)
+        ignore.write('\n')
+def searchdir(arguments,ignorefile):
+    if arguments['--root']==[] or arguments['--root']==None or len(arguments['--root'])==0:
+        return
+    #shell=shellbool is true is needed for windows. But cases issues on Linux
+    if sys.platform=="linux":
+        shellbool=False
+    else:
+        shellbool=True
+    
+    folders=open(arguments['--txt'],"a+")
+    print("Adding Folders/Files to", arguments['--txt'])
+    if type(arguments['--root'])==str:
+        arguments['--root']=arguments['--root'].split(",")
+    list=arguments['--root']
+    for root in list:
+        if root=="":
+          continue
+        if os.path.isdir(root)==False:
+          print(root," is not valid directory")
+          continue
+        subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=shellbool)
+        subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=shellbool)
+    print("Done")
+
+#Main
+if __name__ == '__main__':
+    arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
+#interactive Mode
+    if arguments.get("--config")==None:
+        arguments['--config']=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
+    if (arguments['scan']!=True  and arguments['grab']!=True and arguments['missing']!=True) or arguments['interactive']:
+            message_dialog(
+                title="Interactive Mode",
+                text="Welcome to AHD Cross you are starting the programs in interactive Mode\nBefore Deciding on the next question note a config File is required in this mode",
+            ).run()
+            startconfig = button_dialog(
+                title="Start Config Wizard",
+                buttons=[("Yes", True), ("No", False)],
+            ).run()
+            if startconfig:
+                createconfig(config)
+            continueloop =True
+            updateargs(arguments)
+            setup_binaries(arguments)
+            set_ignored(arguments)
+            while continueloop!=None:
+
+                continueloop= radiolist_dialog(
+                values=[
+
+                    ("download", "Cross Seed Scan"),
+                    ("missing", "Upload Finder"),
+                    ("scan", "Update Folder/Files"),
+                    ("config", "Change Config Location"),
+                    ("config2", "Start Config Wizard")
+                ],
+                title="Interactive Mode",
+                text="",
+                ).run()
+                if continueloop==None:
+                    quit()
+                elif continueloop=="scan":
+                    t=setup_txt(arguments,True)
+                    if t==False:
+                        continue
+                    duperemove(arguments['--fdignore'])
+                    searchdir(arguments,arguments['--fdignore'])
+                    duperemove(arguments['--txt'])
+                elif continueloop=="missing":
+                    t=setup_txt(arguments,True)
+                    if t==False:
+                        continue
+                    setup_binaries(arguments)
+                    missing(arguments)
+                    duperemove(arguments['--misstxt'])
+                elif continueloop=="download":
+                    t=setup_txt(arguments,True)
+                    if t==False:
+                        continue
+                    setup_binaries(arguments)
+                    download(arguments,arguments['--txt'])
+                elif continueloop=="config":
+                    arguments['--config']=input_dialog(title='Config Path',text='Please Enter the Path to your Config File:').run()
+                    t=setup_txt(arguments,True)
+                    if t==False:
+                        continue
+                    info="Please Check if the arguments are correct for New Config\nIf not their was probably an issue reading the file\nNote all that matters for this mode are the entries with -- at the beginning\n\n"+ str(arguments)
+                    message_dialog(
+                        title="Options Change",
+                        text=info
+                    ).run()
+                elif continueloop=="config2":
+                    createconfig(config)
+                    updateargs(arguments)
+                    set_ignored(arguments)
+                    setup_txt(arguments,True)
+
+
+
+#Non interactive Mode
+    if arguments['scan']:
+        updateargs(arguments)
+        setup_txt(arguments)
+        setup_binaries(arguments)
+        set_ignored(arguments)
+        duperemove(arguments['--fdignore'])
+        searchdir(arguments,arguments['--fdignore'])
+        duperemove(arguments['--txt'])
+    elif arguments['grab']:
+        updateargs(arguments)
+        setup_txt(arguments)
+        setup_binaries(arguments)
+        download(arguments,arguments['--txt'])
+    elif arguments['missing']:
+        updateargs(arguments)
+        setup_txt(arguments)
+        setup_binaries(arguments)
+        missing(arguments)
+        duperemove(arguments['--misstxt'])
