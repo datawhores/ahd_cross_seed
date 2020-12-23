@@ -76,6 +76,7 @@ grab downloads using a list of the directories/files. Files can be generated man
     --size ; -z  set whether a search should be done by name only or include file size restriction. If true then an additonal check will be added to see if all the matching
     --exclude ; -e For any directory this type of file will not be checked for possible cross seeds
     --fd fd program location
+    --wget wget program location
 
 
 ## Find Files to Upload to AHD
