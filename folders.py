@@ -4,6 +4,7 @@ import os
 from general import *
 import tempfile
 import subprocess
+import sys
 class Folder:
     """
     Finds for example the 2160p Remux Files in a folder. Holds information about those files.
@@ -36,6 +37,7 @@ class Folder:
         self.get_files().seek(0, 0)
         if len(self.get_files().readlines())<1:
             return
+
         self.get_files().seek(0, 0)
         for line in self.get_files().readlines():
             line=line.rstrip()
@@ -44,120 +46,124 @@ class Folder:
     def set_files(self,files):
         fd=self.arguments['--fd']
         dir=self.get_dir().rstrip()
-
-
+        #shell=shellbool is true is needed for windows. But cases issues on Linux
+        if sys.platform=="linux":
+            shellbool=False
+        else:
+            shellbool=True
 
         if self.get_type()=="remux2160":
             temp=subprocess.check_output([fd,'remux','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
-            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
-            
+            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
+
 
         elif self.get_type()=="remux1080":
             temp=subprocess.check_output([fd,'remux','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
-            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="remux720":
             temp=subprocess.check_output([fd,'remux','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
-            '--exclude','*2160*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*2160*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="blu2160":
             temp=subprocess.check_output([fd,'blu','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="blu1080":
             temp=subprocess.check_output([fd,'blu','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="blu720":
             temp=subprocess.check_output([fd,'blu','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*2160*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="webr2160":
             temp=subprocess.check_output([fd,'webr','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+subprocess.check_output([fd,'web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+subprocess.check_output([fd,'web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="webr1080":
             temp=subprocess.check_output([fd,'webr','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+subprocess.check_output([fd,'.web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+subprocess.check_output([fd,'.web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="webr720":
             temp=subprocess.check_output([fd,'webr','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+subprocess.check_output([fd,'.web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+subprocess.check_output([fd,'.web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
-        
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
+
         elif self.get_type()=="webr480":
             temp=subprocess.check_output([fd,'webr','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+subprocess.check_output([fd,'web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
-       '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+subprocess.check_output([fd,'web-r','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
+       '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="webdl2160":
             temp=subprocess.check_output([fd,'webdl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+ subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+ subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="webdl1080":
             temp=subprocess.check_output([fd,'webdl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+ subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+ subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="webdl720":
             temp=subprocess.check_output([fd,'webdl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="webdl480":
             temp=subprocess.check_output([fd,'webdl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-        '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')+subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
+        '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')+subprocess.check_output([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-            '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="web2160":
             temp=subprocess.check_output([fd,'*.[wW][eE][bB].*','.',dir,'-d','1','--glob','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
-            '--exclude','*720*','--exclude','*480*','--exclude','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*720*','--exclude','*480*','--exclude','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="web1080":
             temp=subprocess.check_output([fd,'*.[wW][eE][bB].*','.',dir,'-d','1','--glob','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
-            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="web720":
             temp=subprocess.check_output([fd,'*.[wW][eE][bB].*','.',dir,'-d','1','--glob','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
-            '--exclude','*1080*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*1080*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="web480":
             temp=subprocess.check_output([fd,'*.[wW][eE][bB].*','.',dir,'-d','1','--glob','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
-            '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="tv2160":
             temp=subprocess.check_output([fd,'hdtv','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
-            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="tv1080":
             temp=subprocess.check_output([fd,'hdtv','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
-            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*720*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="tv720":
             temp=subprocess.check_output([fd,'hdtv','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
-            '--exclude','*2160*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*2160*','--exclude','*480*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="tv480":
             temp=subprocess.check_output([fd,'hdtv','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
-            '--exclude','*2160*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '--exclude','*2160*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="other2160":
             temp=subprocess.check_output([fd,'.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-            '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="other1080":
             temp=subprocess.check_output([fd,'.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*720*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-            '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="other720":
             temp=subprocess.check_output([fd,'.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*2160*','--exclude','*480*','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-            '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
         elif self.get_type()=="other480":
             temp=subprocess.check_output([fd,'.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*2160*','--exclude','*720*','--exclude','480','--exclude','*[rR][eE][mM][uU][xX]*','--exclude','*.[wW][eE][bB]*','--exclude','*.[bB][lL][uU]*','--exclude','*[tT][vV]*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-            '*[tT][rR][aA][iL][eE][rR]*'],shell=True).decode('utf-8')
+            '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool).decode('utf-8')
+
         files.write(temp.rstrip())
         self.files=files
     def get_first(self):
@@ -333,7 +339,7 @@ def scan_folder(arguments,line,source,errorfile):
         webdl4.set_size()
         get_missing(errorfile,arguments,webdl4)
         files.close()
-        
+
 
     """
 Cross Seed Torrent or Output Functions
