@@ -218,8 +218,8 @@ def missing(arguments):
             errorpath.close()
             continue
 
-        # print("Waiting 5 Seconds")
-        # time.sleep(5)
+        print("Waiting 5 Seconds")
+        time.sleep(5)
 def setup_txt(arguments,interactive=None):
     if interactive==None:
         interactive=False
