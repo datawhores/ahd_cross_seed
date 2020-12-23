@@ -40,6 +40,10 @@ On Linux
 
 on Windows
 venv\Scripts\python
+# Create Config
+A config file is highly recommended. There are two easy ways to create one
+1. run the program in interactive mode(please see below)
+2. copy or rename example.config to ahd_cross.txt. It must be in the same folder. Fill it out with your values
 
 # Quick Guide
 Please start here for a general overview of how to run this program. 
@@ -50,6 +54,7 @@ Please start here for a general overview of how to run this program.
 scan a directory will write the paths to a txt document
     required
     --txt this is where the txt file will be saved
+    --root at least one root is needed
     
     optional
     --delete ; -d This will delete the txt file otherwise the file is just appeneded
