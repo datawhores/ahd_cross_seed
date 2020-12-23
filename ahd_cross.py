@@ -1,75 +1,66 @@
 #! /usr/bin/env python3
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
-    ahd_cross.py [(-h | --help) --txt=<txtlocation> --fd <fd> --config <config> --delete --lines-skip <num_lines_skipped]
-    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --size <t_or_f> --misstxt <output>]
-    [--root <normal_root(s)>... --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
-    ahd_cross.py interactive [--txt=<txtlocation> --fd <fd>  --config <config> --delete --lines-skip <num_lines_skipped]
-    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --size <t_or_f> --misstxt <output>]
-    [--root <normal_root(s)>...  --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
-    ahd_cross.py scan [--txt=<txtlocation> --fd <fd>  --config <config> --delete]
-    [--root <normal_root(s)>... --ignore <sub_folders_to_ignore>...]
-    ahd_cross.py grab [--txt=<txtlocation> --fd <fd>  --lines-skip <num_lines_skipped> --torrent <torrents_download> --cookie <cookie> --output <output> ]
-    [--api <apikey> --config <config> --date <int> --size <t_or_f>]
+    ahd_cross.py [(-h | --help) --txt=<txtlocation> --fd <fd> --wget <wget> --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore>]
+    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int>  --misstxt <output>]
+    [--root <normal_root>... --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
+    ahd_cross.py interactive [--txt=<txtlocation> --fd <fd> --wget <wget>  --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore>]
+    [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --misstxt <output>]
+    [--root <normal_root>...  --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
+    ahd_cross.py scan [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore> --config <config> --delete]
+    [--root <normal_root>... --ignore <sub_folders_to_ignore>...]
+    ahd_cross.py grab [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore>  --lines-skip <num_lines_skipped> --torrent <torrents_download> --cookie <cookie> --output <output> ]
+    [--api <apikey> --config <config> --date <int> ]
     [--exclude <source_excluded>]...
-    ahd_cross.py missing [--txt=<txtlocation> --fd <fd>  --misstxt <output>  --api <apikey> --config <config>]
+    ahd_cross.py missing [--txt=<txtlocation> --fd <fd> --wget <wget>  --misstxt <output>  --api <apikey> --config <config>]
     [--exclude <source_excluded>...]
 
-
-
 Options:
-  --h ;--help     Show this screen
-  --config ; -x <config> load arguments from a config file. Can be used alternatively/with ALL required arguments
-  --txt <txtlocation>  txt file with all the file/directory name. Required for scan or grab
-  --fd  Use to replace the built in fd file. fd is used to search a folder using criteria pre-determined by this program
-========================================================================================================================================================
-[interactive]
-Note:arguments can be blank for this action
-Will display a GUI on the commandline.
+ -h --help     Show this screen.
+ --txt <txtlocation>  txt file with all the file names(required for all commands)
+--fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path
+--config ; -x <config> commandline overwrites config
+--fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory.
+other OS may need to input this manually
+--wget <wget> used to download files   
 
-<pick 1>
-ahd_cross.py [arguments]
-ahd_cross.py interactive [arguments]
-========================================================================================================================================================
+=============================================================================================================================================
 
-[scan]
- scan a directory to create a document with all folders and files
+ ahd_cross.py scan
+ scan tv or movie folders root folder(s) create a list of directories. 'txt file creator'. Need at least 1 root.
+<required>
+--root <normal_root(s)> Scan this directory. Much like the ls(linux) or dir(windows) command
+<optional>
+--delete; -d  Will delete the old txt file(optional)
+--ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional)
 
- ahd_cross.py scan [arguments]
+=============================================================================================================================================
 
-<required arguments>
---root <normal_root(s)> root folder to scan
+ ahd_cross.py grab
+ grab downloads torrents using txt file option to download torrent with --cookie and/or output to file.
+<choose 1>
+  --torrent ; -t <torrents_download>  Here are where the torrent files will download
+  --output ; -o <output>  Here are where the torrentlinks will be written
+<required>
+  --api ; -a <apikey> This is your ahd passkey
+  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.
+<optional>
+  --date ; -d <int> only download torrents newer then this input should be int, and represents days. By default it is set to around 25 years  [default: 10000 ]
+  --lines-skip <num_lines_skipped> Number of lines in txt file to skip during grab  [default: 0]
+  --exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.
 
+=============================================================================================================================================
 
-
-<optional arguments>
---delete; -d  Will delete the old txt file
---ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan
-========================================================================================================================================================
-[grab]
-Downloads and/or send to output txt file torrents using input txt file.
-
-ahd_cross.py grab
-<required arguments>
---cookie  <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.
---api ; -a <apikey> This is your ahd passkey
-
-
-<choose at least 1>
---output ; -o <output>  Here are where the torrentlinks will be written
---torrent ; -t <torrents_download>  Here are where the torrent files will downloa
-
- <optional>
---date ; -d <int> only download torrents newer then this input should be int, and represents days. By default it is set to around 25 years(optional)  [default: 10000 ]
---lines-skip <num_lines_skipped> Number of lines in txt file to skip during grab  [default: 0]
---exclude ; -e <source_excluded>  These file type(s) will not be scanned blu,tv,remux,other,web.(optional)
---size ; -s <t_or_f> set whether a search should be done by name only or include file size restriction. If true then secondary check will be added to find a match [default: t]
-========================================================================================================================================================
-[missing]
+ [missing]
 Checks to see if you have any potential uploads by comparing your files to what has already been uploaded
 
 ahd_cross.py missing
+<required>
 --misstxt <txt_where_potential_uploads_are written> here we output to a txt file files that don't have any uploads. This means that we can potentially upload these, for rank. Or to increase the amount of cross seeds we have
+
+
+
+
 
 
 
@@ -100,25 +91,6 @@ import sys
 """
 Setup Function
 """
-def setFD():
-    if sys.platform=="linux":
-        try:
-            subprocess.run(['fd'])
-            arguments['--fd']="fd"
-        except:
-            path=os.getcwd()
-            fd=f"{path}/ bin/fd"
-            arguments['--fd']=fd
-    if sys.platform=="win32":
-        try:
-            subprocess.run(['fd.exe'])
-            arguments['--fd']="fd.exe"
-        except:
-            path=os.getcwd()
-            fd=f"{path}/ bin/fd.exe"
-            arguments['--fd']=fd
-    
-
 def duperemove(txt):
     print("Removing Duplicate lines from ",txt)
     if txt==None:
@@ -162,8 +134,6 @@ def updateargs(arguments):
         arguments['--root']=config['scan']['root']
     if arguments['--ignore']==[] or arguments['--ignore']==None:
         arguments['--ignore']=config['scan']['ignore']
-    if arguments['--size']=="1":
-        arguments['--size']=config['grab']['size']
     return arguments
 def releasetype(arguments):
     source={'remux':'yes','web':'yes','blu':'yes','tv':'yes','other':'yes'}
@@ -210,8 +180,8 @@ def download(arguments,txt):
             errorpath.write(errorstring)
             errorpath.close()
             continue
-        print("Waiting 5 Seconds")
-        time.sleep(5)
+        #print("Waiting 5 Seconds")
+        #time.sleep(5)
 def missing(arguments):
     if arguments['--misstxt']=='' or len(arguments['--misstxt'])==0 or arguments['--misstxt']==None:
         print("misstxt must be configured for missing scan ")
@@ -248,14 +218,12 @@ def missing(arguments):
             errorpath.close()
             continue
 
-        print("Waiting 5 Seconds")
+        # print("Waiting 5 Seconds")
         # time.sleep(5)
-def setup(arguments,interactive=None):
+def setup_txt(arguments,interactive=None):
     if interactive==None:
         interactive=False
-    updateargs(arguments)
     file=arguments['--txt']
-    os.chdir(Path.home())
     try:
         open(file,"a+").close()
     except:
@@ -269,11 +237,7 @@ def setup(arguments,interactive=None):
             ).run()
             return False
 
-def setupscan(arguments):
-    setFD()
-    print("Scanning for folders")
-    if arguments['--delete']:
-        open(file, 'w').close()
+def setup_binaries(arguments):
     fdignore=arguments['--fdignore']
     if fdignore==None:
         try:
@@ -283,6 +247,47 @@ def setupscan(arguments):
             exit()
     t=open(arguments['--fdignore'], 'w')
     t.close()
+  
+ 
+    if arguments['--fd']==None and sys.platform=="linux": 
+        t=subprocess.run(['fd'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+        arguments['--fd']="fd"      
+        if t.returncode!=0:
+            path=os.getcwd()
+            fd=os.path.join(path,"bin","fd")
+            arguments['--fd']=fd
+    if arguments['--wget']==None and sys.platform=="linux": 
+        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+        arguments['--wget']="wget"
+        if t2.returncode!=0:
+            path=os.getcwd()
+            wget=os.path.join(path,"bin","wget")
+            arguments['--wget']=wget    
+    if arguments['--fd']==None and sys.platform=="win32": 
+        t=subprocess.run(['fd.exe'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=True)
+        arguments['--fd']="fd.exe"  
+        if t.returncode!=0:
+            path=os.getcwd()
+            fd=os.path.join(path,"bin","fd.exe")
+            arguments['--fd']=fd
+    if arguments['--wget']==None and sys.platform=="win32": 
+        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=True)
+        arguments['--wget']="wget.exe"    
+        if t2.returncode!=0:
+            path=os.getcwd()
+            wget=os.path.join(path,"bin","wget.exe")
+            arguments['--wget']=wget  
+        
+        
+        
+        
+        
+        
+      
+       
+  
+       
+              
 
 """
 Scanning Functions
@@ -304,21 +309,21 @@ def set_ignored(arguments):
         ignore.write(element)
         ignore.write('\n')
 def searchdir(arguments,ignorefile):
-    if arguments['--normalrt']==[] or arguments['--normalrt']==None:
+    if arguments['--root']==[] or arguments['--root']==None or len(arguments['--root'])==0:
         return
     folders=open(arguments['--txt'],"a+")
-    print("Adding Normal Folders to", arguments['--txt'])
-    if type(arguments['--normalrt'])==str:
-        arguments['--normalrt']=arguments['--normalrt'].split(",")
-    list=arguments['--normalrt']
+    print("Adding Folders/Files to", arguments['--txt'])
+    if type(arguments['--root'])==str:
+        arguments['--root']=arguments['--root'].split(",")
+    list=arguments['--root']
     for root in list:
         if root=="":
           continue
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-        subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders)
-        subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders)
+        subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=True)
+        subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=True)
     print("Done")
 
 #Main
@@ -339,6 +344,9 @@ if __name__ == '__main__':
             if startconfig:
                 createconfig(config)
             continueloop =True
+            updateargs(arguments)
+            setup_binaries(arguments)
+            set_ignored(arguments)
             while continueloop!=None:
 
                 continueloop= radiolist_dialog(
@@ -356,30 +364,28 @@ if __name__ == '__main__':
                 if continueloop==None:
                     quit()
                 elif continueloop=="scan":
-                    t=setup(arguments,True)
+                    t=setup_txt(arguments,True)
                     if t==False:
                         continue
-                    setupscan(arguments)
-                    set_ignored(arguments)
                     duperemove(arguments['--fdignore'])
                     searchdir(arguments,arguments['--fdignore'])
                     duperemove(arguments['--txt'])
                 elif continueloop=="missing":
-                    t=setup(arguments,True)
+                    t=setup_txt(arguments,True)
                     if t==False:
                         continue
-                    setupscan(arguments)
+                    setup_binaries(arguments)
                     missing(arguments)
                     duperemove(arguments['--misstxt'])
                 elif continueloop=="download":
-                    t=setup(arguments,True)
+                    t=setup_txt(arguments,True)
                     if t==False:
                         continue
-                    setupscan(arguments)
+                    setup_binaries(arguments)
                     download(arguments,arguments['--txt'])
                 elif continueloop=="config":
                     arguments['--config']=input_dialog(title='Config Path',text='Please Enter the Path to your Config File:').run()
-                    t=setup(arguments,True)
+                    t=setup_txt(arguments,True)
                     if t==False:
                         continue
                     info="Please Check if the arguments are correct for New Config\nIf not their was probably an issue reading the file\nNote all that matters for this mode are the entries with -- at the beginning\n\n"+ str(arguments)
@@ -389,22 +395,29 @@ if __name__ == '__main__':
                     ).run()
                 elif continueloop=="config2":
                     createconfig(config)
-                    setup(arguments,True)
+                    updateargs(arguments)
+                    set_ignored(arguments)
+                    setup_txt(arguments,True)
 
 
 
 #Non interactive Mode
     if arguments['scan']:
-        setup(arguments)
-        setupscan(arguments)
+        updateargs(arguments)
+        setup_txt(arguments)
+        setup_binaries(arguments)
         set_ignored(arguments)
         duperemove(arguments['--fdignore'])
         searchdir(arguments,arguments['--fdignore'])
         duperemove(arguments['--txt'])
     elif arguments['grab']:
-        setup(arguments)
+        updateargs(arguments)
+        setup_txt(arguments)
+        setup_binaries(arguments)
         download(arguments,arguments['--txt'])
     elif arguments['missing']:
-        setup(arguments)
+        updateargs(arguments)
+        setup_txt(arguments)
+        setup_binaries(arguments)
         missing(arguments)
         duperemove(arguments['--misstxt'])
