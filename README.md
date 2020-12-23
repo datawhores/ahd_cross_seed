@@ -157,12 +157,6 @@ Note: If you have a sonnar or raddar file please check these repos out [placehol
 `ahd_cross.py grab [arguments]` 
 
 You will need to provide a txt file of directories/folders. Either generated manually or with the scan command
-### Type of checks
-
-Their are two ways for a file/Folder to match one way is for all the information like group resolution source type, etc to match. 
-Alternatively second way is for just the group and filesize to match. The reason it is not just the filesize, is because sometimes remuxes are basically the same sizes between groups. The Second check is toggle off and on by the --size argument
-
-If all values match, then the file is downloaded
 
 #### Folder vs File
 ##### Folder
