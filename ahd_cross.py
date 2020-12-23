@@ -86,6 +86,7 @@ from classes import *
 from files import *
 from prompt_toolkit.shortcuts import button_dialog
 import sys
+from shutil import which
 
 
 """
@@ -248,40 +249,39 @@ def setup_binaries(arguments):
             exit()
     t=open(arguments['--fdignore'], 'w')
     t.close()
-    #shell=shellbool is true is needed for windows. But cases issues on Linux
-    if sys.platform=="linux":
-        shellbool=False
-    else:
-        shellbool=True
-
 
     if arguments['--fd']==None and sys.platform=="linux":
-        t=subprocess.run(['fd'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
-        arguments['--fd']="fd"
-        if t.returncode!=0:
+        if len(which('fd'))>0:
+            arguments['--fd']=which('fd')
+        else:
             fd=os.path.join(workingdir,"bin","fd")
             arguments['--fd']=fd
+
     if arguments['--wget']==None and sys.platform=="linux":
-        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
-        arguments['--wget']="wget"
-        if t2.returncode!=0:
-            path=os.getcwd()
-            wget=os.path.join(workingdir,"bin","wget")
-            arguments['--wget']=wget
+        if len(which('wget'))>0:
+            arguments['--wget']=which('wget')
+        else:
+            print("Please Install wget")
+            quit()
+
     if arguments['--fd']==None and sys.platform=="win32":
-        t=subprocess.run(['fd.exe'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=shellbool)
-        arguments['--fd']="fd.exe"
-        if t.returncode!=0:
-            path=os.getcwd()
+        if len(which('fd.exe'))>0:
+            arguments['--fd']=which('fd')
+        else:
             fd=os.path.join(workingdir,"bin","fd.exe")
             arguments['--fd']=fd
+
     if arguments['--wget']==None and sys.platform=="win32":
-        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=shellbool)
-        arguments['--wget']="wget.exe"
-        if t2.returncode!=0:
-            path=os.getcwd()
+        if len(which('wget'))>0:
+            arguments['--wget']=which('wget.exe')
+        else:
             wget=os.path.join(workingdir,"bin","wget.exe")
-            arguments['--wget']=wget
+            arguments['--fd']=wget
+
+
+
+
+
 
 
 
@@ -321,7 +321,7 @@ def searchdir(arguments,ignorefile):
         shellbool=False
     else:
         shellbool=True
-    
+
     folders=open(arguments['--txt'],"a+")
     print("Adding Folders/Files to", arguments['--txt'])
     if type(arguments['--root'])==str:
