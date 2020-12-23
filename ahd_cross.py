@@ -180,8 +180,8 @@ def download(arguments,txt):
             errorpath.write(errorstring)
             errorpath.close()
             continue
-        # print("Waiting 5 Seconds")
-        # time.sleep(5)
+        print("Waiting 5 Seconds")
+        time.sleep(5)
 def missing(arguments):
     if arguments['--misstxt']=='' or len(arguments['--misstxt'])==0 or arguments['--misstxt']==None:
         print("misstxt must be configured for missing scan ")
