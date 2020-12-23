@@ -124,7 +124,7 @@ def get_matches(errorfile,arguments,files):
             name=re.sub("/", ".",name)
             torrent=os.path.join(torrentfolder,name)
             print(torrent,'\n',link)
-            print(wget)
+
 
             try:
                 subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
