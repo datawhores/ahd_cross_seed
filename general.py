@@ -9,10 +9,12 @@ from prompt_toolkit.shortcuts import radiolist_dialog
 from prompt_toolkit.shortcuts import button_dialog
 from prompt_toolkit.shortcuts import checkboxlist_dialog
 import os
+import re
 """
 General Functions
 """
 def get_matches(errorfile,arguments,files):
+    wget=arguments['--wget']
     torrentfolder=arguments['--torrent']
     api=arguments['--api']
     cookie=arguments['--cookie']
@@ -68,7 +70,7 @@ def get_matches(errorfile,arguments,files):
             print("Probably no results")
             return
     for i in range(max):
-        title=False
+        titlematch=False
         filedate=False
         group=False
         resolution=False
@@ -79,18 +81,23 @@ def get_matches(errorfile,arguments,files):
         if querytitle==None:
             continue
         querygroup=lower(element['releasegroup'])
+        if querygroup==None:
+            querygroup=""
         queryresolution=element['resolution']
         querysource=lower(element['media'])
         if querysource=="uhd blu-ray":
             querysource="blu-ray"
+        if querysource=="web-dl" or querysource=="webrip":
+            querysource="web"
         queryencoding=element['encoding']
         querysize= int(element['size'])
         querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
-        if querytitle==fileguessit.get_name():
-            title=True
+        if querytitle==title:
+            titlematch=True
         if querysource==fileguessit.get_source():
             source=True
-        if querygroup==fileguessit.get_group():
+        if querygroup==fileguessit.get_group() or re.search(querygroup,fileguessit.get_group(),re.IGNORECASE)!=None \
+        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None:
             group=True
         if queryresolution==fileguessit.get_resolution():
             resolution=True
@@ -98,11 +105,12 @@ def get_matches(errorfile,arguments,files):
             filedate=True
         if difference(querysize,filesize)<.01:
             sizematch=True
-        if (title is True and source is True and group is True and resolution is True \
-        and filedate is True) or ((filedate is True and group is True and sizematch is True) and filesize!=0):
+        if ((titlematch is True and source is True and group is True and resolution is True \
+        and filedate is True and sizematch is True )and filesize!=0):
             pass
         else:
             continue
+
         if arguments['--output']!=None  and arguments['--output']!="" and arguments['--output']!="None":
             link="https://awesome-hd.me/torrents.php?id=" + element['groupid']+"&torrentid="+ element['id']
             t=open(arguments['--output'],'a')
@@ -111,13 +119,13 @@ def get_matches(errorfile,arguments,files):
         if arguments['--torrent']!=None and arguments['--torrent']!="" and  arguments['--torrent']!="None":
             link="https://awesome-hd.me/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
             name=(element['name']+ "." + element['year']+ "." + element['media']+ "." + element['resolution']+ "." + element['encoding']). replace(" ",".")
-            torrent=torrentfolder + ("[ahd]"+ name +".torrent").replace("/", "_")
+            name=("[ahd]"+ name +".torrent").replace("/", "_")
+            torrent=os.path.join(torrentfolder,name)
             print(torrent,'\n',link)
-            subprocess.run(['wget','--load-cookies',cookie,link,'-O',torrent])
             try:
-                subprocess.run(['wget','--load-cookies',cookie,link,'-O',torrent])
+                subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
             except:
-                print("web error")
+                print("Download error")
 def get_missing(errorfile,arguments,files,encode=None):
     if encode==None:
         encode=False
@@ -142,6 +150,7 @@ def get_missing(errorfile,arguments,files,encode=None):
         return
     search = "https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
     print("Searching For",files.type,"with:",search)
+
     try:
         response = requests.get(search, timeout=120)
     except:
@@ -179,7 +188,7 @@ def get_missing(errorfile,arguments,files,encode=None):
             output.close()
             return
     for i in range(max):
-        title=False
+        titlematch=False
         group=False
         resolution=False
         source=False
@@ -189,6 +198,8 @@ def get_missing(errorfile,arguments,files,encode=None):
         if querytitle==None:
             continue
         querygroup=lower(element['releasegroup'])
+        if querygroup=="None":
+            querygroup=""
         queryresolution=element['resolution']
         querysource=lower(element['media'])
         if querysource=="uhd blu-ray":
@@ -197,19 +208,20 @@ def get_missing(errorfile,arguments,files,encode=None):
         querysize= int(element['size'])
         querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
         if querytitle==title:
-            title=True
+            titlematch=True
         if querysource==fileguessit.get_source():
             source=True
-        if querygroup==fileguessit.get_group():
+        if querygroup==fileguessit.get_group() or re.search(querygroup,fileguessit.get_group(),re.IGNORECASE)!=None \
+        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None:
             group=True
         if queryresolution==fileguessit.get_resolution():
             resolution=True
         if difference(querysize,filesize)<.01:
             sizematch=True
-        if (title is True and source is True and group is True and resolution is True \
-        ) or ((group is True and sizematch is True) and filesize!=0):
-            return
-        if (encode==False and title is True and source is True  and resolution is True):
+        if encode is False and source is True and resolution is True:
+            return  
+        if ((titlematch is True and source is True and group is True and resolution is True \
+        and sizematch is True) and filesize!=0):
             return
     print("Adding Potential Upload to File")
     output=open(output,"a+")
@@ -266,68 +278,34 @@ def createconfig(config):
         config.add_section('scan')
     message_dialog(
         title="Config Creator",
-        text="Welcome to the Config Creator.\nA config File is recommended to run this program\nWe will Start by adding root or Folders to Scan\nNote You'll need at least one root",
+        text="Welcome to the Config Creator.\nA config File is recommended to run this program\nWe will Start by adding root or Folders to Scan\nNote You'll need at least one root\nNote:This will overright ahd_Cross.txt if you confirm at the end",
     ).run()
 
     newroot =True
     root=None
-    normalrootstr=""
-    sonarrootstr=""
-    radarrootstr=""
+    rootstr=""
     ignorestr=""
     while newroot:
-        type= radiolist_dialog(
-        values=[
-            ("normalrt", "Normal Root"),
-            ("sonarrt", "Sonarr Root"),
-            ("radarrt", "Radarr Root"),
-            ("info", "Info"),
-        ],
-        title="Type Selector",
-        text="What type of root folder do you have",
-        ).run()
-        if type==None:
-            break
-        elif type=="info":
-            message_dialog(
-                title="Root Folder Types",
-                text="Please Read this carefully.\nNote an entry is a path that will be written to the txtfile\nWhich will then be used by the Upload Finder \
-or Cross Seed Scanner\n\nsonarrt is for programs like Sonarr or Medusa\nYour Folders MUST be in the form /root/TV Show/Season_Folders\n \
-Note This Search is very strict so something like\n /root/Oldies/TV Show/Season_Folders would # NOTE:  be searched\n in that /root/Oldies/ should be added as another sonarrt root \
-\nEach Season Folder is a seperate entry\n\nradarrt is for programs like Radarr Every MKV is treated as a seperated entry\nA max depth of 2:root folder and sub-folders are searched \
-\n/root/sub-folder/sub-folder and anything deeper will not be searched\n\nLastly we have normalrt this is the setup for many people\nThis Mode DOES NOT SEARCH within sub-folders\n \
-It treats every file or folder max 1 depth as as an entry\n/root/dir and /root/movie.mkv will be added\nSomething like /root/dir/dir or /root/dir/movie.mkv would not be added\n\nFor any mode if you want to search deeper then default\nyou must add the sub-directory as another root"
-            ).run()
-            continue
         if root==None:
             root = input_dialog(title='Getting Root Directories ',text='Please Enter the Path to a Root Directory:').run()
         if root==None:
             continue
-        addstring="Adding:"+root +" Type:"+type+" is this Okay? "
+        addstring="Adding:"+root + " is this Okay? "
         option = button_dialog(
              title=addstring,
              buttons=[("Yes", True), ("No", False)],
         ).run()
         if option==False:
             root=None
-            continue
-        elif type=="normalrt":
-            normalrootstr=normalrootstr+root+","
-            root=None
-        elif type=="sonarrt":
-            sonarrootstr= sonarrootstr+root+","
-            root=None
-        elif type=="radarrt":
-            radarrootstr= radarrootstr=+root+","
+            pass
+        else:
+            rootstr=rootstr+root+","
             root=None
         newroot= button_dialog(
                  title="Add Another Root Folder ",
                  buttons=[("Yes", True), ("No", False)],
         ).run()
-    config.set('scan', "normalrt", normalrootstr)
-    config.set('scan', "sonarrt", sonarrootstr)
-    config.set('scan', "radarrt", radarrootstr)
-
+    config.set('scan', "root", rootstr)
 
     confirm = button_dialog(
                  title="Add a Folder or File to ignore ",
@@ -341,8 +319,14 @@ It treats every file or folder max 1 depth as as an entry\n/root/dir and /root/m
             ).run()
         if confirm:
             ignorepath = input_dialog(title='Getting ignore Path ',text='Please Enter the Path to ignore:').run()
-            ignorestr=ignorestr+ignorepath+","
-
+        
+        addstring="Adding:"+ignorepath + " is this Okay? "
+        option = button_dialog(
+             title=addstring,
+             buttons=[("Yes", True), ("No", False)],
+        ).run()
+        if addstring==True:
+             ignorestr= ignorestr+ignorepath
         confirm = button_dialog(
                      title="Add Another Folder to ignore ",
                      buttons=[("Yes", True), ("No", False)],
@@ -464,11 +448,11 @@ It treats every file or folder max 1 depth as as an entry\n/root/dir and /root/m
     ).run()
     config.set('grab', "size", size)
 
-    fd="fd"
+    fd=""
     config.set('general', "fd", fd)
     confirm=False
     while confirm==False:
-        fd = input_dialog(title='FD' ,text='FD is required for Program\nDownloads Can be found here https://github.com/sharkdp/fd/releases\nBy Default the program will be called with fd\nPlease Look into adding this to your path\nAlternatively Enter a different path here\nPress Cancel to use the Default  ').run()
+        fd = input_dialog(title='FD' ,text='FD is required for Program\nDownloads Can be found here https://github.com/sharkdp/fd/releases\nBy Default the program comes with a version of fd for your OS\nIf you want to use your own binary, you can enter your choice here \nPress Cancel to use the Default  ').run()
         if txtpath==None:
             break
         config.set('general', "fd", fd)
@@ -477,7 +461,27 @@ It treats every file or folder max 1 depth as as an entry\n/root/dir and /root/m
                  title=confirmtxt,
                  buttons=[("Yes", True), ("No", False)],
             ).run()
-
+    wget=""
+    config.set('general', "wget", wget)
+    confirm=False
+    while confirm==False:
+        fd = input_dialog(title='WGET' ,text='WGET is required for Program\nLinux comes with this Preinstalled usually for windows:https://eternallybored.org/misc/wget/\nBy Default the program comes with a version of wget for Windows\nIf you want to use your own binary, you can enter your choice here \nPress Cancel to use the Default  ').run()
+        if txtpath==None:
+            break
+        config.set('general', "fd", fd)
+        confirmtxt="You entered:"+outpath+" is this Okay?"
+        confirm = button_dialog(
+                 title=confirmtxt,
+                 buttons=[("Yes", True), ("No", False)],
+            ).run()
+    
+    
+    
+    
+    
+    
+    
+    
     sections = config.sections()
     config_string=""
     for section in sections:
