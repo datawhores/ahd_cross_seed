@@ -43,12 +43,8 @@ class guessitinfo():
             self.source=self.source.lower()
         except:
             pass
-        try:
-            remux=remux.source.lower()
-        except:
-            pass
-        if remux == "remux" or self.source == "hd-dvd" or self.source=="Ultra HD Blu-ray":
-            self.source = remux
+        if self.source== "ultra hd blu-ray" or self.source == "hd-dvd":
+            self.source="blu-ray"
     def set_group(self):
         self.group=self.get_info().get('release_group',"")
         try:
