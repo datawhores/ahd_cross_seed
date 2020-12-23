@@ -34,12 +34,8 @@ class File:
     def get_encode(self):
         return  self.encode
     def set_size(self):
-        if self.arguments["--size"]==False or self.arguments["--size"]=="F" or self.arguments["--size"]=="false" or self.arguments["--size"]=="f":
-            self.size=0
-            return
         self.size=os.path.getsize(self.get_name())
     def set_valid(self):
-        #set valid
         if re.search("[rR][eE][mM][uU][xX]",self.name)!=None and self.source['remux']=='yes':
             self.valid=True
         elif re.search("[rR][eE][mM][uU][xX]",self.name)==None and re.search("[bB][lL][uU]",self.name)!=None and self.source['blu']=='yes':
