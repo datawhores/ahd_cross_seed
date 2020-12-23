@@ -39,7 +39,7 @@ def get_matches(errorfile,arguments,files):
     search = "https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
     print("Searching For",files.type,"with:",search)
     try:
-        response = requests.get(search, timeout=120)
+        response = requests.get(search, timeout=300)
     except:
         errorpath=open(errorfile,"a+")
         errorstring=title +": Could not find Get a response from AHD URL: "+search +" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
@@ -124,7 +124,7 @@ def get_matches(errorfile,arguments,files):
             name=re.sub("/", ".",name)
             torrent=os.path.join(torrentfolder,name)
             print(torrent,'\n',link)
-
+            print(wget)
 
             try:
                 subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
@@ -156,7 +156,7 @@ def get_missing(errorfile,arguments,files,encode=None):
     print("Searching For",files.type,"with:",search)
 
     try:
-        response = requests.get(search, timeout=120)
+        response = requests.get(search, timeout=300)
     except:
         errorpath=open(errorfile,"a+")
         errorstring=title +": Could not find Get a response from AHD URL: "+search +" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
