@@ -120,8 +120,8 @@ def get_matches(errorfile,arguments,files):
             link="https://awesome-hd.me/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
             title=re.sub(": ","-",querytitle)
             name=(title+ "." + element['year']+ "." + querysource+ "." + queryresolution+  "."+ querygroup+  "." + queryencoding). replace(" ",".")
-            name=name.replace("|","1")
-            name=("[ahd]"+ name +".torrent").replace("/", ".")
+            name="[ahd]"+ name +".torrent"
+            name=re.sub("/", ".",name)
             torrent=os.path.join(torrentfolder,name)
             print(torrent,'\n',link)
             print(wget)
