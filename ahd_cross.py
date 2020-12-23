@@ -22,7 +22,7 @@ Options:
 --config ; -x <config> commandline overwrites config
 --fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory.
 other OS may need to input this manually
---wget <wget> used to download files   
+--wget <wget> used to download files
 
 =============================================================================================================================================
 
@@ -180,8 +180,8 @@ def download(arguments,txt):
             errorpath.write(errorstring)
             errorpath.close()
             continue
-        print("Waiting 5 Seconds")
-        time.sleep(5)
+        # print("Waiting 5 Seconds")
+        # time.sleep(5)
 def missing(arguments):
     if arguments['--misstxt']=='' or len(arguments['--misstxt'])==0 or arguments['--misstxt']==None:
         print("misstxt must be configured for missing scan ")
@@ -247,47 +247,52 @@ def setup_binaries(arguments):
             exit()
     t=open(arguments['--fdignore'], 'w')
     t.close()
-  
- 
-    if arguments['--fd']==None and sys.platform=="linux": 
+    #shell=shellbool is true is needed for windows. But cases issues on Linux
+    if sys.platform=="linux":
+        shellbool=False
+    else:
+        shellbool=True
+
+
+    if arguments['--fd']==None and sys.platform=="linux":
         t=subprocess.run(['fd'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
-        arguments['--fd']="fd"      
+        arguments['--fd']="fd"
         if t.returncode!=0:
             path=os.getcwd()
             fd=os.path.join(path,"bin","fd")
             arguments['--fd']=fd
-    if arguments['--wget']==None and sys.platform=="linux": 
+    if arguments['--wget']==None and sys.platform=="linux":
         t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
         arguments['--wget']="wget"
         if t2.returncode!=0:
             path=os.getcwd()
             wget=os.path.join(path,"bin","wget")
-            arguments['--wget']=wget    
-    if arguments['--fd']==None and sys.platform=="win32": 
-        t=subprocess.run(['fd.exe'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=True)
-        arguments['--fd']="fd.exe"  
+            arguments['--wget']=wget
+    if arguments['--fd']==None and sys.platform=="win32":
+        t=subprocess.run(['fd.exe'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=shellbool)
+        arguments['--fd']="fd.exe"
         if t.returncode!=0:
             path=os.getcwd()
             fd=os.path.join(path,"bin","fd.exe")
             arguments['--fd']=fd
-    if arguments['--wget']==None and sys.platform=="win32": 
-        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=True)
-        arguments['--wget']="wget.exe"    
+    if arguments['--wget']==None and sys.platform=="win32":
+        t2=subprocess.run(['wget'],stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT,shell=shellbool)
+        arguments['--wget']="wget.exe"
         if t2.returncode!=0:
             path=os.getcwd()
             wget=os.path.join(path,"bin","wget.exe")
-            arguments['--wget']=wget  
-        
-        
-        
-        
-        
-        
-      
-       
-  
-       
-              
+            arguments['--wget']=wget
+
+
+
+
+
+
+
+
+
+
+
 
 """
 Scanning Functions
@@ -311,6 +316,12 @@ def set_ignored(arguments):
 def searchdir(arguments,ignorefile):
     if arguments['--root']==[] or arguments['--root']==None or len(arguments['--root'])==0:
         return
+    #shell=shellbool is true is needed for windows. But cases issues on Linux
+    if sys.platform=="linux":
+        shellbool=False
+    else:
+        shellbool=True
+    
     folders=open(arguments['--txt'],"a+")
     print("Adding Folders/Files to", arguments['--txt'])
     if type(arguments['--root'])==str:
@@ -322,8 +333,8 @@ def searchdir(arguments,ignorefile):
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-        subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=True)
-        subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=True)
+        subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=shellbool)
+        subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=shellbool)
     print("Done")
 
 #Main
