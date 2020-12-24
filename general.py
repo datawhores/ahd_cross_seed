@@ -105,8 +105,8 @@ def get_matches(errorfile,arguments,files):
             filedate=True
         if difference(querysize,filesize)<.01:
             sizematch=True
-        if ((titlematch is True and source is True and group is True and resolution is True \
-        and filedate is True and sizematch is True )and filesize!=0):
+        if (titlematch is True and source is True and group is True and resolution is True \
+        and filedate is True) and (sizematch is True or filesize==0):
             pass
         else:
             continue
@@ -130,6 +130,10 @@ def get_matches(errorfile,arguments,files):
                 subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
             except:
                 print("Download error")
+                errorpath=open(errorfile,"a+")
+                errorstring=title + ": Could not find Download:"+ link  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
+                errorpath.write(errorstring)
+                errorpath.close()
 def get_missing(errorfile,arguments,files,encode=None):
     if encode==None:
         encode=False
@@ -223,7 +227,7 @@ def get_missing(errorfile,arguments,files,encode=None):
         if difference(querysize,filesize)<.01:
             sizematch=True
         if encode is False and source is True and resolution is True:
-            return  
+            return
         if ((titlematch is True and source is True and group is True and resolution is True \
         and sizematch is True) and filesize!=0):
             return
@@ -323,7 +327,7 @@ def createconfig(config):
             ).run()
         if confirm:
             ignorepath = input_dialog(title='Getting ignore Path ',text='Please Enter the Path to ignore:').run()
-        
+
         addstring="Adding:"+ignorepath + " is this Okay? "
         option = button_dialog(
              title=addstring,
@@ -478,14 +482,14 @@ def createconfig(config):
                  title=confirmtxt,
                  buttons=[("Yes", True), ("No", False)],
             ).run()
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
     sections = config.sections()
     config_string=""
     for section in sections:
@@ -514,3 +518,4 @@ def createconfig(config):
     with open(configpath, 'w') as configfile:
       print("Writing to configfile")
       config.write(configfile)
+
