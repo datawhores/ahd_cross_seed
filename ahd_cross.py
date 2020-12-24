@@ -16,14 +16,15 @@ Usage:
     [--exclude <source_excluded>...]
 
 Options:
- -h --help     Show this screen.
+ --help; -h     Show this screen.
  --txt <txtlocation>  txt file with all the file names(required for all commands)
---fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path
---config ; -x <config> commandline overwrites config
---fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory.
-other OS may need to input this manually
---wget <wget> used to download files
-
+ --api ; -a <apikey> This is your ahd passkey. Required for scanning and finding uploads
+ --fd <binary_fd> fd is a program to scan for files, use this if you don't have fd in path
+ --config ; -x <config> commandline overwrites config
+ --fdignore <gitignore_style_ignorefile> fd .fdignore file used by fd tto find which folders to ignore, on linux it defaults to the home directory.
+ other OS may need to input this manually
+ --wget <wget> used to download files
+ --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this. Required for scanning and finding uploads.
 =============================================================================================================================================
 
  ahd_cross.py scan
@@ -31,8 +32,8 @@ other OS may need to input this manually
 <required>
 --root <normal_root(s)> Scan this directory. Much like the ls(linux) or dir(windows) command
 <optional>
---delete; -d  Will delete the old txt file(optional)
---ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan (optional)
+--delete; -d  Will delete the old txt file
+--ignore ; -i <sub_folders_to_ignore>  folder will be ignored for scan
 
 =============================================================================================================================================
 
@@ -41,9 +42,6 @@ other OS may need to input this manually
 <choose 1>
   --torrent ; -t <torrents_download>  Here are where the torrent files will download
   --output ; -o <output>  Here are where the torrentlinks will be written
-<required>
-  --api ; -a <apikey> This is your ahd passkey
-  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this.
 <optional>
   --date ; -d <int> only download torrents newer then this input should be int, and represents days. By default it is set to around 25 years  [default: 10000 ]
   --lines-skip <num_lines_skipped> Number of lines in txt file to skip during grab  [default: 0]
@@ -150,8 +148,9 @@ def releasetype(arguments):
         except KeyError:
             pass
     return source
-def download(arguments,txt):
+def download(arguments):
     index=0
+    txt=arguments['--txt']
     list=open(txt,"r")
     source=releasetype(arguments)
     errorfile=errorpath=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
@@ -313,7 +312,8 @@ def set_ignored(arguments):
             continue
         ignore.write(element)
         ignore.write('\n')
-def searchdir(arguments,ignorefile):
+def searchdir(arguments):
+    ignorefile=arguments['--fdignore']
     if arguments['--root']==[] or arguments['--root']==None or len(arguments['--root'])==0:
         return
     #shell=shellbool is true is needed for windows. But cases issues on Linux
@@ -341,12 +341,13 @@ def searchdir(arguments,ignorefile):
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
 #interactive Mode
+
     if arguments.get("--config")==None:
         arguments['--config']=os.path.dirname(os.path.abspath(__file__))+"/ahd_cross.txt"
     if (arguments['scan']!=True  and arguments['grab']!=True and arguments['missing']!=True) or arguments['interactive']:
             message_dialog(
                 title="Interactive Mode",
-                text="Welcome to AHD Cross you are starting the programs in interactive Mode\nBefore Deciding on the next question note a config File is required in this mode",
+                text="Welcome to AHD_Cross_Find you are starting the programs in interactive Mode\nBefore Deciding on the next question note a config File is required in this mode",
             ).run()
             startconfig = button_dialog(
                 title="Start Config Wizard",
@@ -379,7 +380,7 @@ if __name__ == '__main__':
                     if t==False:
                         continue
                     duperemove(arguments['--fdignore'])
-                    searchdir(arguments,arguments['--fdignore'])
+                    searchdir(arguments)
                     duperemove(arguments['--txt'])
                 elif continueloop=="missing":
                     t=setup_txt(arguments,True)
@@ -393,7 +394,7 @@ if __name__ == '__main__':
                     if t==False:
                         continue
                     setup_binaries(arguments)
-                    download(arguments,arguments['--txt'])
+                    download(arguments)
                 elif continueloop=="config":
                     arguments['--config']=input_dialog(title='Config Path',text='Please Enter the Path to your Config File:').run()
                     t=setup_txt(arguments,True)
@@ -425,7 +426,7 @@ if __name__ == '__main__':
         updateargs(arguments)
         setup_txt(arguments)
         setup_binaries(arguments)
-        download(arguments,arguments['--txt'])
+        download(arguments)
     elif arguments['missing']:
         updateargs(arguments)
         setup_txt(arguments)
