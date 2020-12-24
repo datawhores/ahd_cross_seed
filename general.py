@@ -187,13 +187,7 @@ def get_missing(errorfile,arguments,files,encode=None):
             loop=False
         else:
             print("Probably no results")
-            print("Adding Potential Upload to File")
-            output=open(output,"a+")
-            output.write(files.get_dir())
-            output.write(":")
-            output.write(file)
-            output.write('\n')
-            output.close()
+            addmissing(output,site,files,file)
             return
     for i in range(max):
         titlematch=False
@@ -231,15 +225,19 @@ def get_missing(errorfile,arguments,files,encode=None):
         if ((titlematch is True and source is True and group is True and resolution is True \
         and sizematch is True) and filesize!=0):
             return
+        addmissing(output,site,files,file)
+
+def addmissing(output,site,files,file):
     print("Adding Potential Upload to File")
     output=open(output,"a+")
+    output.write(site)
+    output.write(":")
     if files.get_dir()!=0:
         output.write(files.get_dir())
         output.write(":")
     output.write(file)
     output.write('\n')
     output.close()
-
 
 
 def get_imdb(details):
@@ -286,7 +284,7 @@ def createconfig(config):
         config.add_section('scan')
     message_dialog(
         title="Config Creator",
-        text="Welcome to the Config Creator.\nA config File is recommended to run this program\nWe will Start by adding root or Folders to Scan\nNote You'll need at least one root\nNote:This will overright ahd_Cross.txt if you confirm at the end",
+        text="Welcome to the Config Creator.\nA config File is recommended to run this program\nWe will Start by adding root or Folders to Scan\nNote You'll need at least one root\nNote:This will overright ahd_cross.txt if you confirm at the end",
     ).run()
 
     newroot =True
@@ -297,7 +295,7 @@ def createconfig(config):
         if root==None:
             root = input_dialog(title='Getting Root Directories ',text='Please Enter the Path to a Root Directory:').run()
         if root==None:
-            continue
+            break
         addstring="Adding:"+root + " is this Okay? "
         option = button_dialog(
              title=addstring,
@@ -328,6 +326,8 @@ def createconfig(config):
         if confirm:
             ignorepath = input_dialog(title='Getting ignore Path ',text='Please Enter the Path to ignore:').run()
 
+        if confirm==None:
+            break
         addstring="Adding:"+ignorepath + " is this Okay? "
         option = button_dialog(
              title=addstring,
@@ -422,6 +422,7 @@ def createconfig(config):
             excludestr=excludestr+type+","
     config.set('grab', "exclude", excludestr)
 
+
     confirm=False
     while confirm==False:
         outpath = input_dialog(title='Download Links Output TXT',text='Please Enter a path for Writing Matched Links to.\nWith This Every Time a Match is found a download url will be written here\nPress Cancel to Leave Blank').run()
@@ -449,35 +450,28 @@ def createconfig(config):
 
 
 
-    size = button_dialog(
-         title="Check for File Sizes",
-         text="Adds another way to match files if True",
-         buttons=[("Yes", "True"), ("No", "False")],
-    ).run()
-    config.set('grab', "size", size)
+
 
     fd=""
-    config.set('general', "fd", fd)
     confirm=False
     while confirm==False:
         fd = input_dialog(title='FD' ,text='FD is required for Program\nDownloads Can be found here https://github.com/sharkdp/fd/releases\nBy Default the program comes with a version of fd for your OS\nIf you want to use your own binary, you can enter your choice here \nPress Cancel to use the Default  ').run()
         if txtpath==None:
             break
         config.set('general', "fd", fd)
-        confirmtxt="You entered:"+outpath+" is this Okay?"
+        confirmtxt="You entered:"+fd+" is this Okay?"
         confirm = button_dialog(
                  title=confirmtxt,
                  buttons=[("Yes", True), ("No", False)],
             ).run()
     wget=""
-    config.set('general', "wget", wget)
     confirm=False
     while confirm==False:
-        fd = input_dialog(title='WGET' ,text='WGET is required for Program\nLinux comes with this Preinstalled usually for windows:https://eternallybored.org/misc/wget/\nBy Default the program comes with a version of wget for Windows\nIf you want to use your own binary, you can enter your choice here \nPress Cancel to use the Default  ').run()
+        wget = input_dialog(title='WGET' ,text='WGET is required for Program\nLinux comes with this Preinstalled usually for windows:https://eternallybored.org/misc/wget/\nBy Default the program comes with a version of wget for Windows\nIf you want to use your own binary, you can enter your choice here \nPress Cancel to use the Default  ').run()
         if txtpath==None:
             break
-        config.set('general', "fd", fd)
-        confirmtxt="You entered:"+outpath+" is this Okay?"
+        config.set('general', "wget", wget)
+        confirmtxt="You entered:"+wget+ " is this Okay?"
         confirm = button_dialog(
                  title=confirmtxt,
                  buttons=[("Yes", True), ("No", False)],
@@ -518,4 +512,3 @@ def createconfig(config):
     with open(configpath, 'w') as configfile:
       print("Writing to configfile")
       config.write(configfile)
-
