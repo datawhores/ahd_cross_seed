@@ -275,7 +275,7 @@ def setup_binaries(arguments):
             arguments['--wget']=which('wget.exe')
         else:
             wget=os.path.join(workingdir,"bin","wget.exe")
-            arguments['--fd']=wget
+            arguments['--wget']=wget
 
 
 
