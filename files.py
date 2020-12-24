@@ -85,8 +85,7 @@ class File:
     """
     Scanning File Functions
     """
-def download_file(arguments,txt,line,source,errorpath):
-    folders=open(txt,"r")
+def download_file(arguments,line,source,errorpath):
     currentfile=File(line,arguments,source)
     currentfile.set_valid()
     if currentfile.get_valid()==True:
@@ -99,8 +98,6 @@ def download_file(arguments,txt,line,source,errorpath):
     Missing files Functions
     """
 def scan_file(arguments,line,source,errorpath):
-    txt=arguments['--txt']
-    folders=open(txt,"r")
     currentfile=File(line,arguments,source)
     currentfile.set_valid()
     if currentfile.get_valid()==True:
