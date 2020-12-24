@@ -180,7 +180,7 @@ File scans are much the same as folder scan. If the information matches then the
 
 ## missing
 `ahd_cross.py missing [arguments]` 
-You need to generate a txt file for output. Controled b
+You need to generate a txt file for output. Controlled by either
 * --missingtxt in the commandline or
 * missingtxt: in the config file
 
