@@ -187,7 +187,7 @@ def get_missing(errorfile,arguments,files,encode=None):
             loop=False
         else:
             print("Probably no results")
-            addmissing(output,site,files,file)
+            addmissing(output,files,file)
             return
     for i in range(max):
         titlematch=False
@@ -225,13 +225,11 @@ def get_missing(errorfile,arguments,files,encode=None):
         if ((titlematch is True and source is True and group is True and resolution is True \
         and sizematch is True) and filesize!=0):
             return
-        addmissing(output,site,files,file)
+        addmissing(output,files,file)
 
-def addmissing(output,site,files,file):
+def addmissing(output,files,file):
     print("Adding Potential Upload to File")
     output=open(output,"a+")
-    output.write(site)
-    output.write(":")
     if files.get_dir()!=0:
         output.write(files.get_dir())
         output.write(":")
