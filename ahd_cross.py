@@ -170,9 +170,9 @@ def download(arguments,txt):
 
 
         if os.path.isdir(line)==True:
-            download_folder(arguments,txt,line,source,errorfile)
+            download_folder(arguments,line,source,errorfile)
         elif os.path.isfile(line)==True:
-            download_file(arguments,txt,line,source,errorfile)
+            download_file(arguments,line,source,errorfile)
 
         else:
             print("File or Dir Not found")
