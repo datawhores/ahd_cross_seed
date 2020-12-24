@@ -344,7 +344,7 @@ def scan_folder(arguments,line,source,errorfile):
     """
 Cross Seed Torrent or Output Functions
 """
-def download_folder(arguments,txt,line,source,errorfile):
+def download_folder(arguments,line,source,errorfile):
     if source['remux']=='yes':
         files=tempfile.NamedTemporaryFile('w+')
         remux1=Folder(line,"remux1080",arguments,errorfile)
