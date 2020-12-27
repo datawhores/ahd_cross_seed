@@ -1,3 +1,4 @@
+**TODO Currently can't change programs without commandline arg
 # Install
 ## Clone the repository
 git clone https://github.com/excludedBittern8/ahd_cross_seed
