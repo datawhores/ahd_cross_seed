@@ -225,7 +225,7 @@ def get_missing(errorfile,arguments,files,encode=None):
         if ((titlematch is True and source is True and group is True and resolution is True \
         and sizematch is True) and filesize!=0):
             return
-        addmissing(output,files,file)
+    addmissing(output,files,file)
 
 def addmissing(output,files,file):
     print("Adding Potential Upload to File")
