@@ -200,7 +200,7 @@ def get_missing(errorfile,arguments,files,encode=None):
         if querytitle==None:
             continue
         querygroup=lower(element['releasegroup'])
-        if querygroup=="None":
+        if querygroup==None:
             querygroup=""
         queryresolution=element['resolution']
         querysource=lower(element['media'])
