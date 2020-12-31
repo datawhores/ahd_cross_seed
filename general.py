@@ -206,6 +206,8 @@ def get_missing(errorfile,arguments,files,encode=None):
         querysource=lower(element['media'])
         if querysource=="uhd blu-ray":
             querysource="blu-ray"
+        if querysource=="web-dl" or querysource=="webrip":
+            querysource="web"    
         queryencoding=element['encoding']
         querysize= int(element['size'])
         querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
