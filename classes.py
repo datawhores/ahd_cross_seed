@@ -1,8 +1,12 @@
 from guessit import guessit
 from imdb import IMDb, IMDbError
+import logging
+import re
 """
 General Classes
 """
+
+
 class guessitinfo():
     """
     A class for guessit parse on a file
@@ -38,7 +42,6 @@ class guessitinfo():
         self.encode=self.get_info().get('video_codec',"")
     def set_source(self):
         self.source=self.get_info().get('source',"")
-        remux=self.get_info().get('other',"")
         try:
             self.source=self.source.lower()
         except:
@@ -75,3 +78,16 @@ class guessitinfo():
         return self.encode
     def get_source(self):
         return self.source
+class filter(logging.Filter):
+    def __init__(self, arguments):
+        super(filter, self).__init__()
+        self._arguments = arguments
+
+    def filter(self, rec):
+        if rec.msg==None:
+            return 1
+        if type(rec.msg)==dict and rec.msg.get("--api")!=None:
+            rec.msg['--api']=="your_apikey"
+        if  self._arguments['--api'] in rec.msg:
+            rec.msg=re.sub(self._arguments['--api'],"your_apikey",rec.msg)
+        return 1
