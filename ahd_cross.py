@@ -1,18 +1,18 @@
 #! /usr/bin/env python3
 """NOTE: READ DOCUMENTATION BEFORE USAGE.
 Usage:
-    ahd_cross.py [(-h | --help) --txt=<txtlocation> --fd <fd> --wget <wget> --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore>]
+    ahd_cross.py [(-h | --help) --txt=<txtlocation> --fd <fd> --wget <wget> --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore> --log <log>]
     [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int>  --misstxt <output>]
     [--root <normal_root>... --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
-    ahd_cross.py interactive [--txt=<txtlocation> --fd <fd> --wget <wget>  --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore>]
+    ahd_cross.py interactive [--txt=<txtlocation> --fd <fd> --wget <wget>  --config <config> --delete --lines-skip <num_lines_skipped --fdignore <fd_ignore> --log <log>]
     [--torrent <torrents_download> --cookie <cookie> --output <output> --api <apikey> --date <int> --misstxt <output>]
     [--root <normal_root>...  --ignore <sub_folders_to_ignore>...  --exclude <source_excluded>...]
-    ahd_cross.py scan [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore> --config <config> --delete]
+    ahd_cross.py scan [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore> --config <config> --delete --log <log>]
     [--root <normal_root>... --ignore <sub_folders_to_ignore>...]
-    ahd_cross.py grab [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore>  --lines-skip <num_lines_skipped> --torrent <torrents_download> --cookie <cookie> --output <output> ]
+    ahd_cross.py grab [--txt=<txtlocation> --fd <fd> --wget <wget> --fdignore <fd_ignore>  --lines-skip <num_lines_skipped> --torrent <torrents_download> --cookie <cookie> --output <output> --log <log> ]
     [--api <apikey> --config <config> --date <int> ]
     [--exclude <source_excluded>]...
-    ahd_cross.py missing [--txt=<txtlocation> --fd <fd> --wget <wget>  --misstxt <output>  --api <apikey> --config <config>]
+    ahd_cross.py missing [--txt=<txtlocation> --fd <fd> --wget <wget>  --misstxt <output>  --api <apikey> --config <config> --log <log> --lines-skip <num_lines_skipped>]
     [--exclude <source_excluded>...]
 
 Options:
@@ -25,6 +25,8 @@ Options:
  other OS may need to input this manually
  --wget <wget> used to download files
  --cookie ; -c <cookie> This is a cookie file for ahd, their are numerous extensions to grab this. Required for scanning and finding uploads.
+ --log ; -<logs> log file
+
 =============================================================================================================================================
 
  ahd_cross.py scan
@@ -49,10 +51,10 @@ Options:
 
 =============================================================================================================================================
 
- [missing]
-Checks to see if you have any potential uploads by comparing your files to what has already been uploaded
 
 ahd_cross.py missing
+Checks to see if you have any potential uploads by comparing your files to what has already been uploaded
+
 <required>
 --misstxt <txt_where_potential_uploads_are written> here we output to a txt file files that don't have any uploads. This means that we can potentially upload these, for rank. Or to increase the amount of cross seeds we have
 
@@ -85,7 +87,7 @@ from files import *
 from prompt_toolkit.shortcuts import button_dialog
 import sys
 from shutil import which
-
+import logging
 
 """
 Setup Function
@@ -97,11 +99,19 @@ def duperemove(txt):
     input=open(txt,"r")
     lines_seen = set() # holds lines already seen
     for line in input:
+        start=re.search("[a-z]|[0-9]",line, re.IGNORECASE)
+        if start==None:
+            continue
+        start=start.start()
+        start=int(start)
+        line=line[start:-1]
         if line not in lines_seen: # not a duplicate
             lines_seen.add(line)
     input.close()
     outfile = open(txt, "w")
+    lines_seen=sorted(lines_seen)
     for line in lines_seen:
+        line=line+"\n"
         outfile.write(line)
     outfile.close()
 def updateargs(arguments):
@@ -133,6 +143,19 @@ def updateargs(arguments):
         arguments['--root']=config['scan']['root']
     if arguments['--ignore']==[] or arguments['--ignore']==None:
         arguments['--ignore']=config['scan']['ignore']
+    if arguments['--log']==None and len(config['general']['log'])!=0:
+            arguments['--log']=config['general']['log']
+    if arguments['--log']==None and len(config['general']['log'])==0:
+            arguments['--log']="INFO"
+
+    if arguments['--log'].upper() == "DEBUG":
+        ahdlogger.setLevel(logging.DEBUG)
+    elif arguments['--log'].upper() == "INFO":
+        ahdlogger.setLevel(logging.INFO)
+    else:
+        ahdlogger.setLevel(logging.WARN)
+    ahdlogger.debug(arguments)
+
     return arguments
 def releasetype(arguments):
     source={'remux':'yes','web':'yes','blu':'yes','tv':'yes','other':'yes'}
@@ -147,77 +170,62 @@ def releasetype(arguments):
             source[element]="no"
         except KeyError:
             pass
+    ahdlogger.debug(source)
     return source
 def download(arguments):
     index=0
     txt=arguments['--txt']
     list=open(txt,"r")
     source=releasetype(arguments)
-    errorfile=errorpath=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
-    if os.path.isdir(errorfile)==False:
-            os.mkdir(errorfile)
-    errorfile=errorfile+"ahdcross_errors_"+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
     for line in list:
         index=index+1
-        print('\n',line)
+        ahdlogger.warn(f"Directory or File: {line}\n")
         if index<=int(arguments["--lines-skip"]):
-            print("Skipping Line")
+            ahdlogger.warn(f"skipping line")
             continue
         if line=='\n' or line=="" or len(line)==0:
             continue
         line=line.rstrip("\n")
 
-
         if os.path.isdir(line)==True:
-            download_folder(arguments,line,source,errorfile)
+            download_folder(arguments,line,source)
         elif os.path.isfile(line)==True:
-            download_file(arguments,line,source,errorfile)
+            download_file(arguments,line,source)
 
         else:
-            print("File or Dir Not found")
-            errorpath=open(errorfile,"a+")
-            errorstring=line +": File or Dir Not found "  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-            errorpath.write(errorstring)
-            errorpath.close()
+            currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
+            ahdlogger.warn(f"{line} File or Directory Not found-{currentdate}")
             continue
         print("Waiting 5 Seconds")
-        time.sleep(5)
+        # time.sleep(5)
 def missing(arguments):
     if arguments['--misstxt']=='' or len(arguments['--misstxt'])==0 or arguments['--misstxt']==None:
-        print("misstxt must be configured for missing scan ")
+        ahdlogger.warn(f"misstxt must be configured for missing scan ")
         quit()
     source=releasetype(arguments)
     list=open(arguments['--txt'],"r")
     index=0
-    errorfile=pathlib.Path(__file__).parent.absolute().as_posix()+"/Errors/"
-    if os.path.isdir(errorfile)==False:
-            os.mkdir(errorfile)
-    errorfile=errorfile+datetime.now().strftime("%m.%d.%Y_%H%M")+".txt"
     for line in list:
         index=index+1
-        print('\n',line)
+        ahdlogger.warn(f"{line}\n")
         if index<=int(arguments["--lines-skip"]):
-            print("Skipping Line")
+            ahdlogger.warn(f"skipping line")
+            continue
+        if index<=int(arguments["--lines-skip"]):
+            ahdlogger.warn(f"skipping line")
             continue
         elif line=='\n' or line=="" or len(line)==0:
             continue
-        if  re.search("#",line)!=None:
-            print("Skipping Line")
-            continue
+
         line=line.rstrip("\n")
-
         if os.path.isdir(line)==True:
-            scan_folder(arguments,line,source,errorfile)
+            scan_folder(arguments,line,source)
         elif os.path.isfile(line)==True:
-            scan_file(arguments,line,source,errorfile)
+            scan_file(arguments,line,source)
         else:
-            print("File or Dir Not found")
-            errorpath=open(errorfile,"a+")
-            errorstring=line +": File or Dir Not found "  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-            errorpath.write(errorstring)
-            errorpath.close()
+            currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
+            ahdlogger.warn(f"{line} File or Directory Not found-{currentdate}")
             continue
-
         print("Waiting 5 Seconds")
         time.sleep(5)
 def setup_txt(arguments,interactive=None):
@@ -243,11 +251,12 @@ def setup_binaries(arguments):
     if fdignore==None:
         try:
             arguments['--fdignore']=os.path.join(workingdir,".fdignore")
+            t=open(arguments['--fdignore'], 'w')
+            t.close()
         except:
-            print("Error setting fdignore")
+            ahdlogger.warn("Error setting up fdignore")
             exit()
-    t=open(arguments['--fdignore'], 'w')
-    t.close()
+
 
     if arguments['--fd']==None and sys.platform=="linux":
         if len(which('fd'))>0:
@@ -260,7 +269,7 @@ def setup_binaries(arguments):
         if len(which('wget'))>0:
             arguments['--wget']=which('wget')
         else:
-            print("Please Install wget")
+            ahdlogger.warn("Please Install wget")
             quit()
 
     if arguments['--fd']==None and sys.platform=="win32":
@@ -275,10 +284,10 @@ def setup_binaries(arguments):
             arguments['--wget']=which('wget.exe')
         else:
             wget=os.path.join(workingdir,"bin","wget.exe")
-            arguments['--wget']=wget
-
-
-
+            arguments['--fd']=wget
+        ahdlogger.warn(arguments['--fd'])
+        ahdlogger.warn(arguments['--wget'])
+        ahdlogger.warn(arguments['--fdignore'])
 
 
 
@@ -333,13 +342,36 @@ def searchdir(arguments):
         if os.path.isdir(root)==False:
           print(root," is not valid directory")
           continue
-        subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=shellbool)
-        subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=folders,shell=shellbool)
+        t=subprocess.run([arguments['--fd'],'.',root,'-t','d','--max-depth','1','--ignore-file',ignorefile],stdout=subprocess.PIPE,shell=shellbool)
+        t2=subprocess.run([arguments['--fd'],'.',root,'-t','f','-e','.mkv','--max-depth','1','--ignore-file',ignorefile],stdout=subprocess.PIPE,shell=shellbool)
+        t.stdout=t.stdout.decode('utf8', 'strict')
+        t2.stdout=t2.stdout.decode('utf8', 'strict')
+        ahdlogger.warn(t.stdout)
+        ahdlogger.warn(t2.stdout)
+        folders.write(t.stdout)
+        folders.write(t2.stdout)
     print("Done")
 
 #Main
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.2')
+    workingdir=os.path.dirname(os.path.abspath(__file__))
+    try:
+        os.mkdir(os.path.join(workingdir,"Logs"))
+    except:
+        pass
+    arguments = docopt(__doc__, version='ahd_cross_seed_scan 1.5')
+    ahdlogger = logging.getLogger('AHD')
+    myfilter=filter(arguments)
+    ahdlogger.addFilter(myfilter)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    filehandler=logging.FileHandler(os.path.join(workingdir,"Logs","ahdupload.logs"))
+    filehandler.setFormatter(formatter)
+    streamhandler = logging.StreamHandler()
+    streamhandler.setFormatter(formatter)
+
+    ahdlogger.addHandler(filehandler)
+    ahdlogger.addHandler(streamhandler)
+
 #interactive Mode
 
     if arguments.get("--config")==None:
@@ -420,7 +452,7 @@ if __name__ == '__main__':
         setup_binaries(arguments)
         set_ignored(arguments)
         duperemove(arguments['--fdignore'])
-        searchdir(arguments,arguments['--fdignore'])
+        searchdir(arguments)
         duperemove(arguments['--txt'])
     elif arguments['grab']:
         updateargs(arguments)
