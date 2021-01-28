@@ -10,15 +10,20 @@ from prompt_toolkit.shortcuts import button_dialog
 from prompt_toolkit.shortcuts import checkboxlist_dialog
 import os
 import re
+import logging
+import time
+ahdlogger = logging.getLogger('AHD')
 """
 General Functions
 """
-def get_matches(errorfile,arguments,files):
+def get_matches(arguments,files):
     wget=arguments['--wget']
     torrentfolder=arguments['--torrent']
     api=arguments['--api']
     cookie=arguments['--cookie']
     datefilter=(date.today()- timedelta(int(arguments['--date'])))
+    currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
+
     file=files.get_first()
     if file=="No Files":
         return
@@ -30,44 +35,32 @@ def get_matches(errorfile,arguments,files):
         title=title+": " + fileguessit.get_season()
     imdb=get_imdb(fileguessit.get_info())
     if imdb==None:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find IMDB " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print(file," could not find IMDB")
+
+        ahdlogger.warn(file," could not find IMDB")
         return
-    search = "https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
-    print("Searching For",files.type,"with:",search)
+    search = "https://awesome-hd.club/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
+    ahdlogger.warn(f"Searching For {files.type} with: {search}:{currentdate}")
     try:
         response = requests.get(search, timeout=300)
     except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find Get a response from AHD URL: "+search +" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("Issue getting response:",search)
+        ahdlogger.warn(f"Issue getting response: {search}:{currentdate}")
         return
     try:
         results=xmltodict.parse(response.content)
     except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find parse AHD response URL: "+search+" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("unable to parse xml")
+        ahdlogger.warn("unable to parse xml")
         return
     try:
         results['searchresults']['torrent'][1]['name']
         loop=True
         max=len(results['searchresults']['torrent'])
     except KeyError as key:
-        print(key)
         if str(key)=="1":
             element=results['searchresults']['torrent']
             max=1
             loop=False
         else:
-            print("Probably no results")
+            ahdlogger.warn("Probably no results")
             return
     for i in range(max):
         titlematch=False
@@ -94,10 +87,10 @@ def get_matches(errorfile,arguments,files):
         querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
         if querytitle==title:
             titlematch=True
-        if querysource==fileguessit.get_source():
+        if querysource==fileguessit.get_source() or fileguessit.get_source()=="":
             source=True
         if querygroup==fileguessit.get_group() or re.search(querygroup,fileguessit.get_group(),re.IGNORECASE)!=None \
-        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None:
+        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None or fileguessit.get_group()=="":
             group=True
         if queryresolution==fileguessit.get_resolution():
             resolution=True
@@ -110,36 +103,40 @@ def get_matches(errorfile,arguments,files):
             pass
         else:
             continue
+        ahdlogger.debug(f"Comparison UserTitle:{title} SiteTite:{querytitle} UserSource{fileguessit.get_source()} SiteSource:{querysource} UserGroup:{fileguessit.get_group()} SiteGroup:{querygroup} UserRes:{fileguessit.get_resolution()} SiteRes:{queryresolution} Date:{filedate}  \n ")
 
         if arguments['--output']!=None  and arguments['--output']!="" and arguments['--output']!="None":
-            link="https://awesome-hd.me/torrents.php?id=" + element['groupid']+"&torrentid="+ element['id']
+            link="https://awesome-hd.club/torrents.php?id=" + element['groupid']+"&torrentid="+ element['id']
             t=open(arguments['--output'],'a')
-            print("writing to file:",arguments['--output'])
+            ahdlogger.warn("writing to file:",arguments['--output'])
             t.write(link+'\n')
         if arguments['--torrent']!=None and arguments['--torrent']!="" and  arguments['--torrent']!="None":
-            link="https://awesome-hd.me/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
+            link="https://awesome-hd.club/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
             title=re.sub(": ","-",querytitle)
-            name=(title+ "." + element['year']+ "." + querysource+ "." + queryresolution+  "."+ querygroup+  "." + queryencoding). replace(" ",".")
-            name="[ahd]"+ name +".torrent"
+            name=(f"AHD.{title}.{querysource}.{queryresolution}.{querygroup}.torrent")
             name=re.sub("/", ".",name)
             torrent=os.path.join(torrentfolder,name)
-            print(torrent,'\n',link)
-            print(wget)
+            ahdlogger.warn(torrent)
+            ahdlogger.warn(link)
+
 
             try:
                 subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
             except:
-                print("Download error")
-                errorpath=open(errorfile,"a+")
-                errorstring=title + ": Could not find Download:"+ link  + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-                errorpath.write(errorstring)
-                errorpath.close()
-def get_missing(errorfile,arguments,files,encode=None):
+                currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
+                ahdlogger.warn(f"{title}: Could not find Download-{currentdate}")
+
+def get_missing(arguments,files,encode=None):
+
+
+    currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
+
     if encode==None:
         encode=False
     api=arguments['--api']
     output=arguments['--misstxt']
     file=files.get_first()
+
     if file=="No Files":
         return
     filesize=files.get_size()
@@ -150,32 +147,22 @@ def get_missing(errorfile,arguments,files,encode=None):
         title=title+": " + fileguessit.get_season()
     imdb=get_imdb(fileguessit.get_info())
     if imdb==None:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find IMDB " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print(file," could not find IMDB")
+        ahdlogger.warn(f"{file}: could not find IMDB")
+
         return
-    search = "https://awesome-hd.me/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
-    print("Searching For",files.type,"with:",search)
+    search = "https://awesome-hd.club/searchapi.php?action=imdbsearch&passkey=" + api + "&imdb=tt" + imdb
+    ahdlogger.warn(f"Searching For {files.type} with: {search}")
 
     try:
         response = requests.get(search, timeout=300)
     except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find Get a response from AHD URL: "+search +" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("Issue getting response:",search)
+        ahdlogger.warn(f"{search}: Could not find Get a response from AHD URL:{files.get_type()}-{currentdate}")
         return
     try:
         results=xmltodict.parse(response.content)
     except:
-        errorpath=open(errorfile,"a+")
-        errorstring=title +": Could not find parse AHD response URL: "+search+" " +files.get_type() + " - " +datetime.now().strftime("%m.%d.%Y_%H%M") + "\n"
-        errorpath.write(errorstring)
-        errorpath.close()
-        print("unable to parse xml")
+        currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
+        ahdlogger.warn(f"{title}: Could not find parse AHD XML:{search} {files.get_type()}-{currentdate}")
     try:
         results['searchresults']['torrent'][1]['name']
         loop=True
@@ -186,10 +173,11 @@ def get_missing(errorfile,arguments,files,encode=None):
             max=1
             loop=False
         else:
-            print("Probably no results")
+            ahdlogger.warn(f"{title}:Probably no results")
             addmissing(output,files,file)
             return
     for i in range(max):
+
         titlematch=False
         group=False
         resolution=False
@@ -207,35 +195,41 @@ def get_missing(errorfile,arguments,files,encode=None):
         if querysource=="uhd blu-ray":
             querysource="blu-ray"
         if querysource=="web-dl" or querysource=="webrip":
-            querysource="web"    
+            querysource="web"
         queryencoding=element['encoding']
         querysize= int(element['size'])
-        querydate=datetime.strptime(element['time'], '%Y-%m-%d %H:%M:%S').date()
+
         if querytitle==title:
             titlematch=True
-        if querysource==fileguessit.get_source():
+        if querysource==fileguessit.get_source() or fileguessit.get_source()=="":
             source=True
         if querygroup==fileguessit.get_group() or re.search(querygroup,fileguessit.get_group(),re.IGNORECASE)!=None \
-        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None:
+        or re.search(fileguessit.get_group(),querygroup,re.IGNORECASE)!=None or fileguessit.get_group()=="":
             group=True
         if queryresolution==fileguessit.get_resolution():
             resolution=True
         if difference(querysize,filesize)<.01:
             sizematch=True
+
+
+        ahdlogger.debug(f"Comparison UserTitle:{title} SiteTite:{querytitle} UserSource:{fileguessit.get_source()} SiteSource:{querysource} UserGroup:{fileguessit.get_group()} SiteGroup:{querygroup} UserRes:{fileguessit.get_resolution()} SiteRes:{queryresolution}  \n ")
         if encode is False and source is True and resolution is True:
             return
-        if ((titlematch is True and source is True and group is True and resolution is True \
-        and sizematch is True) and filesize!=0):
+        if titlematch is True and source is True and group is True and resolution is True \
+        and sizematch is True and filesize!=0:
             return
-    addmissing(output,files,file)
 
+    addmissing(output,files,file)
 def addmissing(output,files,file):
-    print("Adding Potential Upload to File")
+    ahdlogger.warn("Adding Potential Upload to File")
     output=open(output,"a+")
-    if files.get_dir()!=0:
-        output.write(files.get_dir())
-        output.write(":")
-    output.write(file)
+    output.write("AHD:")
+    if files.get_dir()=="0":
+        output.write("Directory:Single-File:")
+        output.write(file)
+    else:
+        output.write(f"Directory:{files.get_dir()}:")
+        output.write(file)
     output.write('\n')
     output.close()
 
