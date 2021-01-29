@@ -88,7 +88,7 @@ from prompt_toolkit.shortcuts import button_dialog
 import sys
 from shutil import which
 import logging
-
+import copy
 """
 Setup Function
 """
@@ -99,7 +99,7 @@ def duperemove(txt):
     input=open(txt,"r")
     lines_seen = set() # holds lines already seen
     for line in input:
-        start=re.search("[a-z]|[0-9]",line, re.IGNORECASE)
+        start=re.search("[a-z]|[0-9]|/",line, re.IGNORECASE)
         if start==None:
             continue
         start=start.start()
@@ -154,7 +154,7 @@ def updateargs(arguments):
         ahdlogger.setLevel(logging.INFO)
     else:
         ahdlogger.setLevel(logging.WARN)
-    ahdlogger.debug(arguments)
+    ahdlogger.debug(copy.deepcopy(arguments))
 
     return arguments
 def releasetype(arguments):
@@ -332,7 +332,7 @@ def searchdir(arguments):
         shellbool=True
 
     folders=open(arguments['--txt'],"a+")
-    print("Adding Folders/Files to", arguments['--txt'])
+    ahdlogger.warn("Adding Folders/Files to", arguments['--txt'])
     if type(arguments['--root'])==str:
         arguments['--root']=arguments['--root'].split(",")
     list=arguments['--root']
