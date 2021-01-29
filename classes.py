@@ -50,6 +50,15 @@ class guessitinfo():
             self.source="blu-ray"
     def set_group(self):
         self.group=self.get_info().get('release_group',"")
+        if type(self.group)==list:
+            self.group=""
+        if re.search("\(",self.group)!=None or re.search("\)",self.group)!=None:
+            self.group=re.sub("\(","",self.group)
+            self.group=re.sub("\)","",self.group)
+
+        if re.search("\[",self.group)!=None or re.search("\]",self.group)!=None:
+            self.group=re.sub("\[","",self.group)
+            self.group=re.sub("\]","",self.group)        
         try:
             self.group=self.group.lower()
         except:
