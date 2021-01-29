@@ -37,7 +37,6 @@ class File:
     def set_size(self):
         self.size=os.path.getsize(self.get_name())
     def set_valid(self):
-        print("ddsd ",self.name)
         if re.search("[rR][eE][mM][uU][xX]",self.name)!=None and self.source['remux']=='yes':
             self.valid=True
         elif re.search("[rR][eE][mM][uU][xX]",self.name)==None and (re.search("[bB][lL][uU][rR]",self.name)!=None or re.search("[bB][lL][uU]-[rR]",self.name)!=None) and self.source['blu']=='yes':
@@ -111,5 +110,5 @@ def scan_file(arguments,line,source):
         ahdlogger.warn(f"type: {currentfile.get_type()}")
         get_missing(arguments,currentfile,currentfile.get_encode())
     if currentfile.get_valid()==False:
-        ahd.logger("Type excluded")
+        ahdlogger.warn("Type excluded")
         return
