@@ -123,7 +123,6 @@ def get_matches(arguments,files):
             try:
                 subprocess.run([wget,'--load-cookies',cookie,link,'-O',torrent])
             except:
-                currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
                 ahdlogger.warn(f"{title}: Could not find Download-{currentdate}")
 
 def get_missing(arguments,files,encode=None):
@@ -161,7 +160,6 @@ def get_missing(arguments,files,encode=None):
     try:
         results=xmltodict.parse(response.content)
     except:
-        currentdate=datetime.now().strftime("%m.%d.%Y_%H%M")
         ahdlogger.warn(f"{title}: Could not find parse AHD XML:{search} {files.get_type()}-{currentdate}")
     try:
         results['searchresults']['torrent'][1]['name']
@@ -318,7 +316,7 @@ def createconfig(config):
         if confirm:
             ignorepath = input_dialog(title='Getting ignore Path ',text='Please Enter the Path to ignore:').run()
 
-        if confirm==None:
+        if ignorepath==None:
             break
         addstring="Adding:"+ignorepath + " is this Okay? "
         option = button_dialog(
