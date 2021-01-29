@@ -161,6 +161,7 @@ def get_missing(arguments,files,encode=None):
         results=xmltodict.parse(response.content)
     except:
         ahdlogger.warn(f"{title}: Could not find parse AHD XML:{search} {files.get_type()}-{currentdate}")
+        return
     try:
         results['searchresults']['torrent'][1]['name']
         loop=True
