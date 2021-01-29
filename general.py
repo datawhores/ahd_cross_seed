@@ -113,7 +113,7 @@ def get_matches(arguments,files):
         if arguments['--torrent']!=None and arguments['--torrent']!="" and  arguments['--torrent']!="None":
             link="https://awesome-hd.club/torrents.php?action=download&id=" +element['id'] +"&torrent_pass=" +  api
             title=re.sub(": ","-",querytitle)
-            name=(f"AHD.{title}.{querysource}.{queryresolution}.{querygroup}.torrent")
+            name=(f"[AHD]{title}.{querysource}.{queryresolution}.{querygroup}.torrent")
             name=re.sub("/", ".",name)
             torrent=os.path.join(torrentfolder,name)
             ahdlogger.warn(torrent)
@@ -249,11 +249,9 @@ def get_imdb(details):
            time.sleep(10)
    if len(results) == 0:
         return None
-   if 'year' in details:
-    for movie in results:
+   for movie in results:
         if ((details.get('year')==movie.get('year')) and (movie.get('year')!=None or details.get('year')!=None )):
             return movie.movieID
-    return None
    else:
       return results[0].movieID
 def difference(value1,value2):
