@@ -123,7 +123,7 @@ class Folder:
             '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
         '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool,stdout=subprocess.PIPE).stdout.decode('utf-8')+subprocess.run([fd,'web-dl','.',dir,'-d','1','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*2160*',
             '--exclude','*1080*','--exclude','*720*','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude',
-            '*[tT][rR ][aA][iL][eE][rR]*'],shell=shellbool,stdout=subprocess.PIPE).stdout.decode('utf-8')
+            '*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool,stdout=subprocess.PIPE).stdout.decode('utf-8')
         elif self.get_type()=="web2160":
             temp=subprocess.run([fd,'*.[wW][eE][bB].*','.',dir,'-d','1','--glob','-e','.mkv','-e','.mp4','-e','.m4v','--exclude','*1080*',
             '--exclude','*720*','--exclude','*480*','--exclude','--exclude','*[sS][aA][mM][pP][lL][eE]*','--exclude','*[tT][rR][aA][iL][eE][rR]*'],shell=shellbool,stdout=subprocess.PIPE).stdout.decode('utf-8')
