@@ -13,7 +13,7 @@ pytz==2020.4
 rebulk==2.0.1
 requests==2.25.1
 six==1.15.0
-urllib3==1.26.2
+urllib3==1.26.3
 wcwidth==0.2.5
 zope.interface==5.2.0
 IMDbPY==2020.9.25
